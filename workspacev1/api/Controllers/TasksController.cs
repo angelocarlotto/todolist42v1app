@@ -96,6 +96,9 @@ namespace api.Controllers
             if (task.DueDate == default) return BadRequest("DueDate is required");
             if (string.IsNullOrWhiteSpace(task.Status) || !allowedStatus.Contains(task.Status)) return BadRequest($"Status must be one of: {string.Join(", ", allowedStatus)}");
             if (string.IsNullOrWhiteSpace(task.Criticality) || !allowedCriticality.Contains(task.Criticality)) return BadRequest($"Criticality must be one of: {string.Join(", ", allowedCriticality)}");
+            // Basic input sanitization
+            task.ShortTitle = System.Net.WebUtility.HtmlEncode(task.ShortTitle.Trim());
+            task.Description = System.Net.WebUtility.HtmlEncode(task.Description.Trim());
             task.TenantId = tenantId;
             task.CreatedBy = username;
             task.CreatedAt = System.DateTime.UtcNow;
@@ -120,6 +123,9 @@ namespace api.Controllers
             if (taskIn.DueDate == default) return BadRequest("DueDate is required");
             if (string.IsNullOrWhiteSpace(taskIn.Status) || !allowedStatus.Contains(taskIn.Status)) return BadRequest($"Status must be one of: {string.Join(", ", allowedStatus)}");
             if (string.IsNullOrWhiteSpace(taskIn.Criticality) || !allowedCriticality.Contains(taskIn.Criticality)) return BadRequest($"Criticality must be one of: {string.Join(", ", allowedCriticality)}");
+            // Basic input sanitization
+            taskIn.ShortTitle = System.Net.WebUtility.HtmlEncode(taskIn.ShortTitle.Trim());
+            taskIn.Description = System.Net.WebUtility.HtmlEncode(taskIn.Description.Trim());
             var task = await _taskService.GetByTenantAndIdAsync(tenantId, id);
             if (task == null) return NotFound();
             taskIn.Id = id;

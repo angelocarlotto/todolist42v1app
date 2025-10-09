@@ -2,7 +2,25 @@
 using api.Models;
 using api.Services;
 
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Add built-in rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }
+        ));
+    options.RejectionStatusCode = 429;
+});
 
 // Add services to the container.
 builder.Services.Configure<DatabaseSettings>(
@@ -15,7 +33,9 @@ builder.Services.AddSingleton<TenantService>();
 builder.Services.AddOpenApi();
 
 
+
 var app = builder.Build();
+app.UseRateLimiter();
 
 // Global exception handler
 app.Use(async (context, next) =>
