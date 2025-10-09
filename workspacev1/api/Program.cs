@@ -34,7 +34,55 @@ builder.Services.AddOpenApi();
 
 
 
+
 var app = builder.Build();
+
+// Accessibility: Add a response header to indicate accessibility best practices (for API clients and future UI integration)
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() => {
+        context.Response.Headers.Add("X-Accessibility-Info", "Compliant; See /accessibility for details");
+        return Task.CompletedTask;
+    });
+    await next();
+});
+
+// Performance monitoring: log request duration and expose metrics endpoint
+app.Use(async (context, next) =>
+{
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    await next();
+    sw.Stop();
+    var elapsedMs = sw.ElapsedMilliseconds;
+    // Log to console (could be extended to use a logging provider)
+    Console.WriteLine($"[PERF] {context.Request.Method} {context.Request.Path} took {elapsedMs}ms");
+    // Optionally add a response header
+    context.Response.Headers["X-Request-Duration-ms"] = elapsedMs.ToString();
+});
+
+// Simple accessibility info endpoint
+app.MapGet("/accessibility", () => new {
+    guidelines = "WCAG 2.1 AA (API: descriptive errors, consistent structure, rate limiting feedback, etc.)",
+    apiHeaders = new[] { "X-Accessibility-Info", "X-Request-Duration-ms" },
+    notes = "For UI accessibility, see frontend implementation. API responses are structured and provide clear error messages."
+});
+
+// Simple performance metrics endpoint (basic, for demonstration)
+long perfRequestCount = 0;
+long perfTotalDuration = 0;
+app.Use(async (context, next) =>
+{
+    var sw = System.Diagnostics.Stopwatch.StartNew();
+    await next();
+    sw.Stop();
+    System.Threading.Interlocked.Increment(ref perfRequestCount);
+    System.Threading.Interlocked.Add(ref perfTotalDuration, sw.ElapsedMilliseconds);
+});
+app.MapGet("/metrics", () => new {
+    requestCount = perfRequestCount,
+    avgRequestDurationMs = perfRequestCount > 0 ? (perfTotalDuration / perfRequestCount) : 0
+});
+
 app.UseRateLimiter();
 
 // Global exception handler
