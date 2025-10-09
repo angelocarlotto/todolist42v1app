@@ -1,3 +1,4 @@
+        
         // ...existing code...
 
         
@@ -21,6 +22,20 @@ namespace api.Controllers
             _taskService = taskService;
         }
 
+
+[HttpGet("reminders")]
+        public async Task<ActionResult<List<TaskItem>>> GetReminders()
+        {
+            var tenantId = User.FindFirst("tenantId")?.Value;
+            if (string.IsNullOrEmpty(tenantId)) return Unauthorized();
+            var allTasks = await _taskService.GetByTenantAsync(tenantId);
+            var now = System.DateTime.UtcNow;
+            var soon = now.AddDays(1);
+            var reminders = allTasks.FindAll(t => t.Status != "Done" && (t.DueDate <= soon));
+            return reminders;
+        }
+
+        
 [HttpPost("{id}/upload")]
         public async Task<IActionResult> UploadFile(string id, [FromForm] List<IFormFile> files)
         {
