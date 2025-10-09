@@ -1,3 +1,10 @@
+using Microsoft.AspNetCore.SignalR;
+// SignalR hub for real-time collaboration
+public class CollaborationHub : Hub { }
+// Add SignalR services
+builder.Services.AddSignalR();
+// Map SignalR hub endpoint
+app.MapHub<CollaborationHub>("/hub/collaboration");
 
 using api.Models;
 using api.Services;

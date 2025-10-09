@@ -61,8 +61,10 @@ namespace api.Controllers
             await _taskService.UpdateAsync(id, task);
             return Ok(task.AssignedUsers);
         }
-        
-[HttpGet("reminders")]
+
+
+        // Improved reminders: get and push reminders to assigned users via SignalR
+        [HttpGet("reminders")]
         public async Task<ActionResult<List<TaskItem>>> GetReminders()
         {
             var tenantId = User.FindFirst("tenantId")?.Value;
@@ -72,6 +74,33 @@ namespace api.Controllers
             var soon = now.AddDays(1);
             var reminders = allTasks.FindAll(t => t.Status != "Done" && (t.DueDate <= soon));
             return reminders;
+        }
+
+        // POST: api/tasks/send-reminders
+        [HttpPost("send-reminders")]
+        public async Task<IActionResult> SendReminders([FromServices] Microsoft.AspNetCore.SignalR.IHubContext<CollaborationHub> hubContext)
+        {
+            var tenantId = User.FindFirst("tenantId")?.Value;
+            if (string.IsNullOrEmpty(tenantId)) return Unauthorized();
+            var allTasks = await _taskService.GetByTenantAsync(tenantId);
+            var now = System.DateTime.UtcNow;
+            var soon = now.AddDays(1);
+            var reminders = allTasks.FindAll(t => t.Status != "Done" && (t.DueDate <= soon));
+            // For each reminder, notify all assigned users (by userId)
+            foreach (var task in reminders)
+            {
+                foreach (var userId in task.AssignedUsers)
+                {
+                    // Send a SignalR message to the user (client must listen on userId group)
+                    await hubContext.Clients.Group(userId).SendAsync("ReceiveReminder", new {
+                        taskId = task.Id,
+                        title = task.ShortTitle,
+                        dueDate = task.DueDate,
+                        criticality = task.Criticality
+                    });
+                }
+            }
+            return Ok(new { sent = reminders.Count });
         }
 
 
