@@ -32,8 +32,12 @@ namespace api.Models
         [BsonElement("criticality")]
         public string Criticality { get; set; } // Low, Medium, High
 
-        [BsonElement("userId")]
-        public string UserId { get; set; }
+
+    [BsonElement("userId")]
+    public string UserId { get; set; }
+
+    [BsonElement("assignedUsers")]
+    public List<string> AssignedUsers { get; set; } = new List<string>();
 
         [BsonElement("tenantId")]
         public string TenantId { get; set; }

@@ -1,3 +1,4 @@
+       
         
         // ...existing code...
 
@@ -22,7 +23,45 @@ namespace api.Controllers
             _taskService = taskService;
         }
 
+ // Assign users to a task (shared assignment)
+        [HttpPost("{id}/assign")]
+        public async Task<IActionResult> AssignUsers(string id, [FromBody] List<string> userIds)
+        {
+            var tenantId = User.FindFirst("tenantId")?.Value;
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(username)) return Unauthorized();
+            if (userIds == null || userIds.Count == 0) return BadRequest("No user IDs provided");
+            var task = await _taskService.GetByTenantAndIdAsync(tenantId, id);
+            if (task == null) return NotFound();
+            // Only add unique user IDs
+            foreach (var uid in userIds)
+            {
+                if (!task.AssignedUsers.Contains(uid))
+                    task.AssignedUsers.Add(uid);
+            }
+            task.UpdatedBy = username;
+            task.UpdatedAt = System.DateTime.UtcNow;
+            await _taskService.UpdateAsync(id, task);
+            return Ok(task.AssignedUsers);
+        }
 
+        // Unassign users from a task
+        [HttpPost("{id}/unassign")]
+        public async Task<IActionResult> UnassignUsers(string id, [FromBody] List<string> userIds)
+        {
+            var tenantId = User.FindFirst("tenantId")?.Value;
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(username)) return Unauthorized();
+            if (userIds == null || userIds.Count == 0) return BadRequest("No user IDs provided");
+            var task = await _taskService.GetByTenantAndIdAsync(tenantId, id);
+            if (task == null) return NotFound();
+            task.AssignedUsers.RemoveAll(uid => userIds.Contains(uid));
+            task.UpdatedBy = username;
+            task.UpdatedAt = System.DateTime.UtcNow;
+            await _taskService.UpdateAsync(id, task);
+            return Ok(task.AssignedUsers);
+        }
+        
 [HttpGet("reminders")]
         public async Task<ActionResult<List<TaskItem>>> GetReminders()
         {
@@ -83,7 +122,7 @@ namespace api.Controllers
 
 
         [HttpPost]
-        public async Task<ActionResult> Create(TaskItem task)
+    public async Task<ActionResult> Create(TaskItem task)
         {
             var tenantId = User.FindFirst("tenantId")?.Value;
             var username = User.Identity?.Name;
@@ -104,13 +143,16 @@ namespace api.Controllers
             task.CreatedAt = System.DateTime.UtcNow;
             task.UpdatedBy = username;
             task.UpdatedAt = System.DateTime.UtcNow;
+            // Ensure AssignedUsers is not null
+            if (task.AssignedUsers == null)
+                task.AssignedUsers = new List<string>();
             await _taskService.CreateAsync(task);
             return CreatedAtAction(nameof(Get), new { id = task.Id }, task);
         }
 
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(string id, TaskItem taskIn)
+    public async Task<IActionResult> Update(string id, TaskItem taskIn)
         {
             var tenantId = User.FindFirst("tenantId")?.Value;
             var username = User.Identity?.Name;
@@ -138,6 +180,9 @@ namespace api.Controllers
                 taskIn.CompletedBy = username;
                 taskIn.CompletedAt = System.DateTime.UtcNow;
             }
+            // Ensure AssignedUsers is not null
+            if (taskIn.AssignedUsers == null)
+                taskIn.AssignedUsers = new List<string>();
             await _taskService.UpdateAsync(id, taskIn);
             return NoContent();
         }
