@@ -41,10 +41,22 @@ namespace api.Models
         [BsonElement("publicShareId")]
         public string PublicShareId { get; set; } // null if not shared
 
-        [BsonElement("createdAt")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [BsonElement("updatedAt")]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    [BsonElement("createdBy")]
+    public string CreatedBy { get; set; }
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("updatedBy")]
+    public string UpdatedBy { get; set; }
+
+    [BsonElement("completedBy")]
+    public string CompletedBy { get; set; }
+
+    [BsonElement("completedAt")]
+    public DateTime? CompletedAt { get; set; }
     }
 }

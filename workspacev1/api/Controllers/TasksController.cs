@@ -43,8 +43,13 @@ namespace api.Controllers
         public async Task<ActionResult> Create(TaskItem task)
         {
             var tenantId = User.FindFirst("tenantId")?.Value;
-            if (string.IsNullOrEmpty(tenantId)) return Unauthorized();
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(username)) return Unauthorized();
             task.TenantId = tenantId;
+            task.CreatedBy = username;
+            task.CreatedAt = System.DateTime.UtcNow;
+            task.UpdatedBy = username;
+            task.UpdatedAt = System.DateTime.UtcNow;
             await _taskService.CreateAsync(task);
             return CreatedAtAction(nameof(Get), new { id = task.Id }, task);
         }
@@ -54,11 +59,20 @@ namespace api.Controllers
         public async Task<IActionResult> Update(string id, TaskItem taskIn)
         {
             var tenantId = User.FindFirst("tenantId")?.Value;
-            if (string.IsNullOrEmpty(tenantId)) return Unauthorized();
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(username)) return Unauthorized();
             var task = await _taskService.GetByTenantAndIdAsync(tenantId, id);
             if (task == null) return NotFound();
             taskIn.Id = id;
             taskIn.TenantId = tenantId;
+            taskIn.UpdatedBy = username;
+            taskIn.UpdatedAt = System.DateTime.UtcNow;
+            // If status is Done and was not previously Done, set completed info
+            if (task.Status != "Done" && taskIn.Status == "Done")
+            {
+                taskIn.CompletedBy = username;
+                taskIn.CompletedAt = System.DateTime.UtcNow;
+            }
             await _taskService.UpdateAsync(id, taskIn);
             return NoContent();
         }
