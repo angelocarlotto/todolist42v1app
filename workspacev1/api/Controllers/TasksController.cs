@@ -35,7 +35,7 @@ namespace api.Controllers
             return reminders;
         }
 
-        
+
 [HttpPost("{id}/upload")]
         public async Task<IActionResult> UploadFile(string id, [FromForm] List<IFormFile> files)
         {
@@ -88,6 +88,14 @@ namespace api.Controllers
             var tenantId = User.FindFirst("tenantId")?.Value;
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(username)) return Unauthorized();
+            // Validation
+            var allowedStatus = new[] { "ToDo", "InProgress", "Done" };
+            var allowedCriticality = new[] { "Low", "Medium", "High" };
+            if (string.IsNullOrWhiteSpace(task.ShortTitle)) return BadRequest("ShortTitle is required");
+            if (string.IsNullOrWhiteSpace(task.Description)) return BadRequest("Description is required");
+            if (task.DueDate == default) return BadRequest("DueDate is required");
+            if (string.IsNullOrWhiteSpace(task.Status) || !allowedStatus.Contains(task.Status)) return BadRequest($"Status must be one of: {string.Join(", ", allowedStatus)}");
+            if (string.IsNullOrWhiteSpace(task.Criticality) || !allowedCriticality.Contains(task.Criticality)) return BadRequest($"Criticality must be one of: {string.Join(", ", allowedCriticality)}");
             task.TenantId = tenantId;
             task.CreatedBy = username;
             task.CreatedAt = System.DateTime.UtcNow;
@@ -104,6 +112,14 @@ namespace api.Controllers
             var tenantId = User.FindFirst("tenantId")?.Value;
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(username)) return Unauthorized();
+            // Validation
+            var allowedStatus = new[] { "ToDo", "InProgress", "Done" };
+            var allowedCriticality = new[] { "Low", "Medium", "High" };
+            if (string.IsNullOrWhiteSpace(taskIn.ShortTitle)) return BadRequest("ShortTitle is required");
+            if (string.IsNullOrWhiteSpace(taskIn.Description)) return BadRequest("Description is required");
+            if (taskIn.DueDate == default) return BadRequest("DueDate is required");
+            if (string.IsNullOrWhiteSpace(taskIn.Status) || !allowedStatus.Contains(taskIn.Status)) return BadRequest($"Status must be one of: {string.Join(", ", allowedStatus)}");
+            if (string.IsNullOrWhiteSpace(taskIn.Criticality) || !allowedCriticality.Contains(taskIn.Criticality)) return BadRequest($"Criticality must be one of: {string.Join(", ", allowedCriticality)}");
             var task = await _taskService.GetByTenantAndIdAsync(tenantId, id);
             if (task == null) return NotFound();
             taskIn.Id = id;
