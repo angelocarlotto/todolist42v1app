@@ -1,24 +1,34 @@
-import logo from './logo.svg';
+import React from 'react';
+import { AppProvider, useApp } from './context/AppContext';
+import Login from './components/Login';
+import Navbar from './components/Navbar';
+import TaskList from './components/TaskList';
+import Notifications from './components/Notifications';
 import './App.css';
+
+function AppContent() {
+  const { isAuthenticated } = useApp();
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
+  return (
+    <div className="app-container">
+      <Navbar />
+      <main className="main-content">
+        <TaskList />
+      </main>
+      <Notifications />
+    </div>
+  );
+}
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
   );
 }
 

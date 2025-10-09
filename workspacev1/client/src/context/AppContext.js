@@ -1,0 +1,228 @@
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import apiService from '../services/api';
+import signalRService from '../services/signalr';
+
+const AppContext = createContext();
+
+const initialState = {
+  user: null,
+  tasks: [],
+  tenants: [],
+  reminders: [],
+  loading: false,
+  error: null,
+  isAuthenticated: false,
+  notifications: [],
+};
+
+function appReducer(state, action) {
+  switch (action.type) {
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload, loading: false };
+    case 'SET_USER':
+      return { ...state, user: action.payload, isAuthenticated: !!action.payload };
+    case 'SET_TASKS':
+      return { ...state, tasks: action.payload };
+    case 'ADD_TASK':
+      return { ...state, tasks: [...state.tasks, action.payload] };
+    case 'UPDATE_TASK':
+      return {
+        ...state,
+        tasks: state.tasks.map(task =>
+          task.id === action.payload.id ? action.payload : task
+        ),
+      };
+    case 'DELETE_TASK':
+      return {
+        ...state,
+        tasks: state.tasks.filter(task => task.id !== action.payload),
+      };
+    case 'SET_TENANTS':
+      return { ...state, tenants: action.payload };
+    case 'SET_REMINDERS':
+      return { ...state, reminders: action.payload };
+    case 'ADD_NOTIFICATION':
+      return {
+        ...state,
+        notifications: [...state.notifications, action.payload],
+      };
+    case 'REMOVE_NOTIFICATION':
+      return {
+        ...state,
+        notifications: state.notifications.filter(n => n.id !== action.payload),
+      };
+    case 'LOGOUT':
+      return { ...initialState };
+    default:
+      return state;
+  }
+}
+
+export function AppProvider({ children }) {
+  const [state, dispatch] = useReducer(appReducer, initialState);
+
+  useEffect(() => {
+    // Check for existing auth on app start
+    const user = apiService.getCurrentUser();
+    if (user) {
+      dispatch({ type: 'SET_USER', payload: user });
+      initializeSignalR();
+      loadTasks();
+    }
+  }, []);
+
+  const initializeSignalR = async () => {
+    try {
+      await signalRService.start();
+      
+      // Set up SignalR event handlers
+      signalRService.onTaskUpdated((task) => {
+        dispatch({ type: 'UPDATE_TASK', payload: task });
+        addNotification(`Task "${task.shortTitle}" was updated`, 'info');
+      });
+
+      signalRService.onTaskCreated((task) => {
+        dispatch({ type: 'ADD_TASK', payload: task });
+        addNotification(`New task "${task.shortTitle}" was created`, 'success');
+      });
+
+      signalRService.onTaskDeleted((taskId) => {
+        dispatch({ type: 'DELETE_TASK', payload: taskId });
+        addNotification('A task was deleted', 'warning');
+      });
+
+      signalRService.onReceiveReminder((reminder) => {
+        addNotification(
+          `Reminder: "${reminder.title}" is due ${new Date(reminder.dueDate).toLocaleDateString()}`,
+          'warning'
+        );
+      });
+    } catch (error) {
+      console.error('Failed to initialize SignalR:', error);
+    }
+  };
+
+  const addNotification = (message, type = 'info') => {
+    const notification = {
+      id: Date.now(),
+      message,
+      type,
+      timestamp: new Date(),
+    };
+    dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      dispatch({ type: 'REMOVE_NOTIFICATION', payload: notification.id });
+    }, 5000);
+  };
+
+  const login = async (username, password) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const result = await apiService.login(username, password);
+      dispatch({ type: 'SET_USER', payload: result.user });
+      await initializeSignalR();
+      await loadTasks();
+      return result;
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error.response?.data?.message || 'Login failed' });
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signalRService.stop();
+      apiService.logout();
+      dispatch({ type: 'LOGOUT' });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const loadTasks = async () => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const tasks = await apiService.getTasks();
+      dispatch({ type: 'SET_TASKS', payload: tasks });
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to load tasks' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const createTask = async (taskData) => {
+    try {
+      const task = await apiService.createTask(taskData);
+      dispatch({ type: 'ADD_TASK', payload: task });
+      await signalRService.broadcastTaskUpdate(task);
+      addNotification('Task created successfully', 'success');
+      return task;
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to create task' });
+      throw error;
+    }
+  };
+
+  const updateTask = async (id, taskData) => {
+    try {
+      await apiService.updateTask(id, taskData);
+      const updatedTask = { ...taskData, id };
+      dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+      await signalRService.broadcastTaskUpdate(updatedTask);
+      addNotification('Task updated successfully', 'success');
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to update task' });
+      throw error;
+    }
+  };
+
+  const deleteTask = async (id) => {
+    try {
+      await apiService.deleteTask(id);
+      dispatch({ type: 'DELETE_TASK', payload: id });
+      addNotification('Task deleted successfully', 'success');
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to delete task' });
+      throw error;
+    }
+  };
+
+  const loadReminders = async () => {
+    try {
+      const reminders = await apiService.getReminders();
+      dispatch({ type: 'SET_REMINDERS', payload: reminders });
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to load reminders' });
+    }
+  };
+
+  const value = {
+    ...state,
+    login,
+    logout,
+    loadTasks,
+    createTask,
+    updateTask,
+    deleteTask,
+    loadReminders,
+    addNotification,
+    dispatch,
+  };
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+}
+
+export function useApp() {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
+}
