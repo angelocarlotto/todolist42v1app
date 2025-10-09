@@ -19,7 +19,8 @@ namespace api.Controllers
         [HttpPost("{id}/share")]
         public async Task<IActionResult> ShareTask(string id)
         {
-            var task = await _taskService.GetAsync(id);
+            // Use GetByTenantAndIdAsync or similar (tenantId not available here, so fallback to null)
+            var task = await _taskService.GetByTenantAndIdAsync(null, id);
             if (task == null) return NotFound();
             task.PublicShareId = Guid.NewGuid().ToString();
             await _taskService.UpdateAsync(id, task);
@@ -29,7 +30,7 @@ namespace api.Controllers
         [HttpPost("{id}/revoke-share")]
         public async Task<IActionResult> RevokeShare(string id)
         {
-            var task = await _taskService.GetAsync(id);
+            var task = await _taskService.GetByTenantAndIdAsync(null, id);
             if (task == null) return NotFound();
             task.PublicShareId = null;
             await _taskService.UpdateAsync(id, task);

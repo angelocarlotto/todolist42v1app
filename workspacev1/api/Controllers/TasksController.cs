@@ -7,6 +7,7 @@ using api.Models;
 using api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -92,11 +93,13 @@ namespace api.Controllers
                 foreach (var userId in task.AssignedUsers)
                 {
                     // Send a SignalR message to the user (client must listen on userId group)
-                    await hubContext.Clients.Group(userId).SendAsync("ReceiveReminder", new {
-                        taskId = task.Id,
-                        title = task.ShortTitle,
-                        dueDate = task.DueDate,
-                        criticality = task.Criticality
+                    await ((IClientProxy)hubContext.Clients.Group(userId)).SendCoreAsync("ReceiveReminder", new object[] {
+                        new {
+                            taskId = task.Id,
+                            title = task.ShortTitle,
+                            dueDate = task.DueDate,
+                            criticality = task.Criticality
+                        }
                     });
                 }
             }

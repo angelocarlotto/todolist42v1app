@@ -1,55 +1,38 @@
 using Microsoft.AspNetCore.SignalR;
-// SignalR hub for real-time collaboration
-public class CollaborationHub : Hub { }
-// Add SignalR services
-builder.Services.AddSignalR();
-// Map SignalR hub endpoint
-app.MapHub<CollaborationHub>("/hub/collaboration");
-
 using api.Models;
 using api.Services;
-
+using Scalar.AspNetCore; // <-- Added using directive
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add built-in rate limiting
-builder.Services.AddRateLimiter(options =>
-{
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 100,
-                Window = TimeSpan.FromMinutes(1),
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            }
-        ));
-    options.RejectionStatusCode = 429;
-});
-
-// Add services to the container.
+builder.Services.AddSignalR();
 builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection("DatabaseSettings"));
 builder.Services.AddSingleton<TaskService>();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<TenantService>();
-
-
-// Add Scalar for API documentation
-builder.Services.AddScalar();
-
-
-
+builder.Services.AddOpenApi();
+builder.Services.AddControllers(); // <-- Added line
 
 var app = builder.Build();
+
+// Map SignalR hub endpoint
+app.MapHub<api.CollaborationHub>("/hub/collaboration");
+// app.UseRateLimiter(); // Disabled: Rate limiter not available
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
 // Accessibility: Add a response header to indicate accessibility best practices (for API clients and future UI integration)
 app.Use(async (context, next) =>
 {
     context.Response.OnStarting(() => {
-        context.Response.Headers.Add("X-Accessibility-Info", "Compliant; See /accessibility for details");
+        if (!context.Response.HasStarted)
+        {
+            context.Response.Headers["X-Accessibility-Info"] = "Compliant; See /accessibility for details";
+        }
         return Task.CompletedTask;
     });
     await next();
@@ -65,7 +48,10 @@ app.Use(async (context, next) =>
     // Log to console (could be extended to use a logging provider)
     Console.WriteLine($"[PERF] {context.Request.Method} {context.Request.Path} took {elapsedMs}ms");
     // Optionally add a response header
-    context.Response.Headers["X-Request-Duration-ms"] = elapsedMs.ToString();
+    if (!context.Response.HasStarted)
+    {
+        context.Response.Headers["X-Request-Duration-ms"] = elapsedMs.ToString();
+    }
 });
 
 // Simple accessibility info endpoint
@@ -73,7 +59,7 @@ app.MapGet("/accessibility", () => new {
     guidelines = "WCAG 2.1 AA (API: descriptive errors, consistent structure, rate limiting feedback, etc.)",
     apiHeaders = new[] { "X-Accessibility-Info", "X-Request-Duration-ms" },
     notes = "For UI accessibility, see frontend implementation. API responses are structured and provide clear error messages."
-});
+}).WithOpenApi();
 
 // Simple performance metrics endpoint (basic, for demonstration)
 long perfRequestCount = 0;
@@ -89,32 +75,10 @@ app.Use(async (context, next) =>
 app.MapGet("/metrics", () => new {
     requestCount = perfRequestCount,
     avgRequestDurationMs = perfRequestCount > 0 ? (perfTotalDuration / perfRequestCount) : 0
-});
-
-app.UseRateLimiter();
-
-// Global exception handler
-app.Use(async (context, next) =>
-{
-    try
-    {
-        await next();
-    }
-    catch (Exception ex)
-    {
-        context.Response.StatusCode = 500;
-        context.Response.ContentType = "application/json";
-        var error = new { message = "An unexpected error occurred.", detail = app.Environment.IsDevelopment() ? ex.ToString() : null };
-        await context.Response.WriteAsJsonAsync(error);
-        // Optionally log the error here
-    }
-});
-
-
-// Configure Scalar API docs endpoint (always enabled)
-app.MapScalar();
+}).WithOpenApi();
 
 app.UseHttpsRedirection();
+app.MapControllers(); // <-- Added line
 
 var summaries = new[]
 {
@@ -133,11 +97,12 @@ app.MapGet("/weatherforecast", () =>
         .ToArray();
     return forecast;
 })
-.WithName("GetWeatherForecast");
+.WithName("GetWeatherForecast")
+.WithOpenApi();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+public record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }

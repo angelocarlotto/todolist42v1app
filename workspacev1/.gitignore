@@ -1,0 +1,58 @@
+# .gitignore for ASP.NET Core, React, and general development
+
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+.history/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Logs
+*.log
+
+# npm
+node_modules/
+
+# React build output
+build/
+dist/
+
+# Environment variables
+.env
+.env.*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Others
+uploads/
+coverage/
+
+# Local database
+*.db
+*.sqlite
+
+# JetBrains Rider
+.idea/
+
+# Test results
+TestResults/
+
+# Backup files
+*.bak
+*.tmp
+~$*
+
+# Ignore local secrets
+secrets.json
