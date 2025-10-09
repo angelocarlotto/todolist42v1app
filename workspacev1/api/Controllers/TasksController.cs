@@ -1,3 +1,6 @@
+        // ...existing code...
+
+        
 using api.Models;
 using api.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +21,32 @@ namespace api.Controllers
             _taskService = taskService;
         }
 
-
+[HttpPost("{id}/upload")]
+        public async Task<IActionResult> UploadFile(string id, [FromForm] List<IFormFile> files)
+        {
+            var tenantId = User.FindFirst("tenantId")?.Value;
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(username)) return Unauthorized();
+            var task = await _taskService.GetByTenantAndIdAsync(tenantId, id);
+            if (task == null) return NotFound();
+            if (files == null || files.Count == 0) return BadRequest("No files uploaded");
+            var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+            if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+            foreach (var file in files)
+            {
+                var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+                var filePath = Path.Combine(uploadDir, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+                task.Files.Add($"/uploads/{fileName}");
+            }
+            task.UpdatedBy = username;
+            task.UpdatedAt = System.DateTime.UtcNow;
+            await _taskService.UpdateAsync(id, task);
+            return Ok(task.Files);
+        }
         [HttpGet]
         public async Task<ActionResult<List<TaskItem>>> Get()
         {
