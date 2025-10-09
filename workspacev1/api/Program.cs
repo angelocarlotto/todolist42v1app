@@ -9,6 +9,7 @@ builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection("DatabaseSettings"));
 builder.Services.AddSingleton<TaskService>();
 builder.Services.AddSingleton<UserService>();
+builder.Services.AddSingleton<TenantService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
