@@ -29,8 +29,9 @@ builder.Services.AddSingleton<TaskService>();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<TenantService>();
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+
+// Add Scalar for API documentation
+builder.Services.AddScalar();
 
 
 
@@ -102,11 +103,9 @@ app.Use(async (context, next) =>
     }
 });
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+
+// Configure Scalar API docs endpoint (always enabled)
+app.MapScalar();
 
 app.UseHttpsRedirection();
 

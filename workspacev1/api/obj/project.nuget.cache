@@ -1,11 +1,25 @@
 {
   "version": 2,
-  "dgSpecHash": "26LwL+Rykgk=",
+  "dgSpecHash": "p8YuR9NQkW0=",
   "success": true,
   "projectFilePath": "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\P12C73F\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.9\\microsoft.aspnetcore.openapi.9.0.9.nupkg.sha512",
-    "C:\\Users\\P12C73F\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+    "C:\\Users\\P12C73F\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512",
+    "C:\\Users\\P12C73F\\.nuget\\packages\\scalar.aspnetcore\\2.0.0\\scalar.aspnetcore.2.0.0.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1603",
+      "level": "Warning",
+      "message": "api depends on Scalar.AspNetCore (>= 1.6.0) but Scalar.AspNetCore 1.6.0 was not found. Scalar.AspNetCore 2.0.0 was resolved instead.",
+      "projectPath": "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
+      "libraryId": "Scalar.AspNetCore",
+      "targetGraphs": [
+        "net9.0"
+      ]
+    }
+  ]
 }
