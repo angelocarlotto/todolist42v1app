@@ -14,7 +14,25 @@ builder.Services.AddSingleton<TenantService>();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+
 var app = builder.Build();
+
+// Global exception handler
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        var error = new { message = "An unexpected error occurred.", detail = app.Environment.IsDevelopment() ? ex.ToString() : null };
+        await context.Response.WriteAsJsonAsync(error);
+        // Optionally log the error here
+    }
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
