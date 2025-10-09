@@ -17,11 +17,13 @@ namespace api.Services
             _tasks = database.GetCollection<TaskItem>(dbSettings.Value.TaskCollectionName);
         }
 
-        public async Task<List<TaskItem>> GetAsync() =>
-            await _tasks.Find(_ => true).ToListAsync();
 
-        public async Task<TaskItem> GetAsync(string id) =>
-            await _tasks.Find(t => t.Id == id).FirstOrDefaultAsync();
+        public async Task<List<TaskItem>> GetByTenantAsync(string tenantId) =>
+            await _tasks.Find(t => t.TenantId == tenantId).ToListAsync();
+
+
+        public async Task<TaskItem> GetByTenantAndIdAsync(string tenantId, string id) =>
+            await _tasks.Find(t => t.TenantId == tenantId && t.Id == id).FirstOrDefaultAsync();
 
         public async Task CreateAsync(TaskItem task) =>
             await _tasks.InsertOneAsync(task);
