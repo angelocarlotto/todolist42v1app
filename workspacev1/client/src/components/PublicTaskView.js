@@ -13,6 +13,43 @@ export default function PublicTaskView() {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({ description: '', status: '' });
   const [saving, setSaving] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState('');
+
+  // Countdown timer for expiration
+  useEffect(() => {
+    if (!task?.shareExpiresAt) return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const expiresAt = new Date(task.shareExpiresAt);
+      const diff = expiresAt - now;
+
+      if (diff <= 0) {
+        setTimeRemaining('Expired');
+        setError('This share link has expired.');
+        setErrorType('expired');
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      let countdown = '';
+      if (days > 0) countdown += `${days}d `;
+      if (days > 0 || hours > 0) countdown += `${hours}h `;
+      if (days > 0 || hours > 0 || minutes > 0) countdown += `${minutes}m `;
+      countdown += `${seconds}s`;
+
+      setTimeRemaining(countdown);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, [task?.shareExpiresAt]);
 
   useEffect(() => {
     let isMounted = true;
@@ -138,13 +175,27 @@ export default function PublicTaskView() {
           fontSize: '0.9rem'
         }}>
           {task.shareExpiresAt && (
-            <div>⏰ This link expires: {format(new Date(task.shareExpiresAt), 'MMM dd, yyyy HH:mm')}</div>
+            <div style={{ marginBottom: '5px' }}>
+              <div>⏰ Expires: {format(new Date(task.shareExpiresAt), 'MMM dd, yyyy HH:mm')}</div>
+              {timeRemaining && (
+                <div style={{ 
+                  fontWeight: 'bold', 
+                  color: timeRemaining === 'Expired' ? '#dc3545' : '#0066cc',
+                  marginTop: '3px',
+                  fontSize: '1rem'
+                }}>
+                  {timeRemaining === 'Expired' ? '❌ Expired' : `⏱️ Time remaining: ${timeRemaining}`}
+                </div>
+              )}
+            </div>
           )}
           {task.shareMaxViews && (
-            <div>👁️ View limit: {task.shareViewCount || 0} / {task.shareMaxViews}</div>
+            <div style={{ marginTop: task.shareExpiresAt ? '8px' : '0' }}>
+              👁️ View limit: {task.shareViewCount || 0} / {task.shareMaxViews}
+            </div>
           )}
           {!task.shareAllowEdit && (
-            <div>🔒 Read-only access (editing disabled)</div>
+            <div style={{ marginTop: '8px' }}>🔒 Read-only access (editing disabled)</div>
           )}
         </div>
       )}
