@@ -53,11 +53,10 @@ class ApiService {
     return response.data;
   }
 
-  async register(username, password, tenantName) {
+  async register(username, password) {
     const response = await this.client.post('/api/auth/register', {
       username,
       password,
-      tenantName,
     });
     return response.data;
   }

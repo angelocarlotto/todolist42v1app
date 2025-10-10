@@ -156,9 +156,43 @@ export function AppProvider({ children }) {
     }, 5000);
   };
 
+  const register = async (username, password) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+      
+      // Call the registration API
+      const result = await apiService.register(username, password);
+      
+      // After successful registration, automatically log in
+      const loginResult = await apiService.login(username, password);
+      dispatch({ type: 'SET_USER', payload: loginResult.user });
+      await initializeSignalR();
+      
+      // Load tasks but don't fail if tasks fail to load
+      try {
+        await loadTasks();
+      } catch (taskError) {
+        console.error('Failed to load tasks after registration:', taskError);
+      }
+      
+      addNotification('Registration successful! Welcome!', 'success');
+      return loginResult;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Registration failed';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      addNotification(errorMessage, 'error');
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
   const login = async (username, password) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+      
       const result = await apiService.login(username, password);
       dispatch({ type: 'SET_USER', payload: result.user });
       await initializeSignalR();
@@ -171,9 +205,12 @@ export function AppProvider({ children }) {
         // Don't throw - the login was successful, just task loading failed
       }
       
+      addNotification('Login successful!', 'success');
       return result;
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error.response?.data?.message || 'Login failed' });
+      const errorMessage = error.response?.data?.message || 'Login failed';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      addNotification(errorMessage, 'error');
       throw error;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -251,6 +288,7 @@ export function AppProvider({ children }) {
   const value = {
     ...state,
     login,
+    register,
     logout,
     loadTasks,
     createTask,

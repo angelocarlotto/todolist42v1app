@@ -7,21 +7,38 @@ function Login() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    tenantName: '',
   });
-  const { login, loading, error } = useApp();
+  const { login, register, loading, error } = useApp();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.username || !formData.password) {
+      return;
+    }
+
+    // Password validation for registration
+    if (!isLogin) {
+      if (formData.password.length !== 8) {
+        alert('Password must be exactly 8 characters');
+        return;
+      }
+      if (!/^\d+$/.test(formData.password)) {
+        alert('Password must contain only digits (0-9)');
+        return;
+      }
+    }
+
     try {
       if (isLogin) {
         await login(formData.username, formData.password);
       } else {
-        // Handle registration - you'll need to implement this
-        console.log('Registration not implemented yet');
+        await register(formData.username, formData.password);
       }
     } catch (error) {
       console.error('Auth error:', error);
+      // Error is already handled in AppContext with notifications
     }
   };
 
@@ -32,10 +49,19 @@ function Login() {
     });
   };
 
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    // Clear form data when switching modes
+    setFormData({
+      username: '',
+      password: '',
+    });
+  };
+
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2>{isLogin ? 'Login' : 'Register'}</h2>
+        <h2>{isLogin ? 'Login to TaskFlow' : 'Create Account'}</h2>
         
         {error && <div className="error-message">{error}</div>}
         
@@ -48,45 +74,45 @@ function Login() {
               name="username"
               value={formData.username}
               onChange={handleInputChange}
+              placeholder="Enter your username"
               required
               disabled={loading}
+              autoComplete="username"
             />
           </div>
           
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">
+              Password
+              {!isLogin && <span className="password-hint"> (8 digits only)</span>}
+            </label>
             <input
               type="password"
               id="password"
               name="password"
               value={formData.password}
               onChange={handleInputChange}
+              placeholder={isLogin ? "Enter your password" : "Enter 8 digits (e.g., 12345678)"}
               required
               disabled={loading}
+              autoComplete={isLogin ? "current-password" : "new-password"}
+              maxLength={isLogin ? undefined : 8}
+              pattern={isLogin ? undefined : "\\d{8}"}
+              title={isLogin ? undefined : "Password must be exactly 8 digits"}
             />
+            {!isLogin && (
+              <small className="form-text">
+                Password must be exactly 8 digits (0-9)
+              </small>
+            )}
           </div>
-          
-          {!isLogin && (
-            <div className="form-group">
-              <label htmlFor="tenantName">Organization Name</label>
-              <input
-                type="text"
-                id="tenantName"
-                name="tenantName"
-                value={formData.tenantName}
-                onChange={handleInputChange}
-                required
-                disabled={loading}
-              />
-            </div>
-          )}
           
           <button 
             type="submit" 
             className="btn btn-primary"
             disabled={loading}
           >
-            {loading ? 'Loading...' : (isLogin ? 'Login' : 'Register')}
+            {loading ? 'Please wait...' : (isLogin ? 'Login' : 'Create Account')}
           </button>
         </form>
         
@@ -94,12 +120,18 @@ function Login() {
           <button
             type="button"
             className="btn btn-link"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={toggleMode}
             disabled={loading}
           >
-            {isLogin ? 'Need to register?' : 'Already have an account?'}
+            {isLogin ? "Don't have an account? Register" : 'Already have an account? Login'}
           </button>
         </div>
+
+        {!isLogin && (
+          <div className="info-message">
+            <p>✨ A new organization will be created automatically for you!</p>
+          </div>
+        )}
       </div>
     </div>
   );
