@@ -19,9 +19,11 @@ namespace api.Controllers
     public class TasksController : ControllerBase
     {
         private readonly TaskService _taskService;
-        public TasksController(TaskService taskService)
+        private readonly IHubContext<CollaborationHub> _hubContext;
+        public TasksController(TaskService taskService, IHubContext<CollaborationHub> hubContext)
         {
             _taskService = taskService;
+            _hubContext = hubContext;
         }
 
  // Assign users to a task (shared assignment)
@@ -179,6 +181,8 @@ namespace api.Controllers
             if (task.AssignedUsers == null)
                 task.AssignedUsers = new List<string>();
             await _taskService.CreateAsync(task);
+            // Broadcast to all users in the tenant group
+            await _hubContext.Clients.Group(tenantId).SendAsync("TaskCreated", task);
             return CreatedAtAction(nameof(Get), new { id = task.Id }, task);
         }
 
@@ -216,6 +220,8 @@ namespace api.Controllers
             if (taskIn.AssignedUsers == null)
                 taskIn.AssignedUsers = new List<string>();
             await _taskService.UpdateAsync(id, taskIn);
+            // Broadcast to all users in the tenant group
+            await _hubContext.Clients.Group(tenantId).SendAsync("TaskUpdated", taskIn);
             return NoContent();
         }
 
@@ -228,6 +234,8 @@ namespace api.Controllers
             var task = await _taskService.GetByTenantAndIdAsync(tenantId, id);
             if (task == null) return NotFound();
             await _taskService.RemoveAsync(id);
+            // Broadcast to all users in the tenant group
+            await _hubContext.Clients.Group(tenantId).SendAsync("TaskDeleted", id);
             return NoContent();
         }
     }

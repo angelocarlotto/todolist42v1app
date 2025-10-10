@@ -19,10 +19,13 @@ class SignalRService {
       await this.connection.start();
       console.log('SignalR Connected');
 
-      // Join user's group for notifications
+      // Join user's group and tenant group for notifications
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       if (user.id) {
         await this.connection.invoke('JoinGroup', user.id);
+      }
+      if (user.tenantId) {
+        await this.connection.invoke('JoinGroup', user.tenantId);
       }
 
       return this.connection;
