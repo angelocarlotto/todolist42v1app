@@ -17,8 +17,13 @@ The application is built with React for the frontend and MongoDB as the database
 
 2. **Task Management**
    - Users can create, edit, and delete tasks.
-   - Users can share any task using a public URL, allowing anyone with the link to view the task (with appropriate privacy/security considerations).
-    - Each task has the following properties:
+   - Users can share any task using a public URL with configurable security options:
+     - Set expiration time (hours/days)
+     - Limit maximum number of views
+     - Toggle public editing permissions
+     - View live countdown timer showing time until expiration
+   - Public viewers see real-time updates via SignalR when tasks are modified
+   - Each task has the following properties:
        - ID (unique identifier)
        - Short title
        - Description
@@ -27,8 +32,10 @@ The application is built with React for the frontend and MongoDB as the database
        - Status (To Do, In Progress, Done)
        - Optional tags
        - Criticality (e.g., Low, Medium, High)
+       - Public share settings (share ID, expiration, max views, view count, edit permission)
    - Users can move tasks between statuses.
    - Tasks are associated with the user and tenant.
+   - Real-time synchronization: When a user updates a task, all other logged-in screens (same user or tenant) reflect the changes immediately via SignalR.
 
 3. **Task Views & Filtering**
    - Users can view tasks by status (To Do, In Progress, Done).
@@ -53,17 +60,23 @@ The application is built with React for the frontend and MongoDB as the database
 
 ## Technical Stack & Architecture
 - The solution consists of two separate applications:
-   - **API (Backend):** C# application (e.g., ASP.NET Core) providing a RESTful API for all business logic, authentication, and data access.
+   - **API (Backend):** C# application (ASP.NET Core) providing a RESTful API for all business logic, authentication, and data access.
    - **Frontend Client:** A React application (JavaScript, no TypeScript) that consumes the API and provides the user interface.
 - **Database:** MongoDB (connection string: mongodb://localhost:27017/)
-- **Authentication:** JWT or OAuth2
-- **Testing:** TDD approach using Jest, React Testing Library, and Supertest
+- **Real-time Communication:** SignalR for live updates and collaboration
+- **Authentication:** JWT tokens with tenant isolation
+- **Testing:** TDD approach using Jest, React Testing Library, and xUnit for C#
 
 ## Acceptance Criteria
 - Users can register, log in, and manage their own tasks.
 - Passwords are exactly 8 digits, numbers only.
 - Tasks are visible only to users within the same tenant.
 - Users can move tasks between To Do, In Progress, and Done.
+- Real-time updates: Task changes reflect immediately across all logged-in user screens via SignalR.
+- Public sharing: Users can generate secure public links with configurable expiration, view limits, and edit permissions.
+- Public viewers see live countdown timer and real-time task updates.
+- Expired or view-limit-exceeded links show appropriate error messages.
+- Share dialog pre-populates with existing settings when re-sharing a task.
 - The UI is responsive and accessible.
 - All core features are covered by automated tests.
 
