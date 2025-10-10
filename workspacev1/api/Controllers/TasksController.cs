@@ -180,6 +180,17 @@ namespace api.Controllers
             // Ensure AssignedUsers is not null
             if (task.AssignedUsers == null)
                 task.AssignedUsers = new List<string>();
+            
+            // Add creation activity log
+            var createActivity = new ActivityLog
+            {
+                UserId = task.UserId ?? username,
+                Username = username,
+                ActivityType = "Created",
+                Description = $"Created the task"
+            };
+            task.ActivityLog.Add(createActivity);
+            
             await _taskService.CreateAsync(task);
             // Broadcast to all users in the tenant group
             await _hubContext.Clients.Group(tenantId).SendAsync("TaskCreated", task);
@@ -192,6 +203,7 @@ namespace api.Controllers
         {
             var tenantId = User.FindFirst("tenantId")?.Value;
             var username = User.Identity?.Name;
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(username)) return Unauthorized();
             // Validation
             var allowedStatus = new[] { "ToDo", "InProgress", "Done" };
@@ -210,12 +222,34 @@ namespace api.Controllers
             taskIn.TenantId = tenantId;
             taskIn.UpdatedBy = username;
             taskIn.UpdatedAt = System.DateTime.UtcNow;
+            
+            // Track status change
+            bool statusChanged = task.Status != taskIn.Status;
+            string oldStatus = task.Status;
+            
             // If status is Done and was not previously Done, set completed info
             if (task.Status != "Done" && taskIn.Status == "Done")
             {
                 taskIn.CompletedBy = username;
                 taskIn.CompletedAt = System.DateTime.UtcNow;
             }
+            
+            // Preserve existing comments and activity log
+            taskIn.Comments = task.Comments;
+            taskIn.ActivityLog = task.ActivityLog;
+            
+            // Add update activity log
+            var updateActivity = new ActivityLog
+            {
+                UserId = userId ?? username,
+                Username = username,
+                ActivityType = statusChanged ? "StatusChanged" : "Updated",
+                Description = statusChanged ? $"Changed status from {oldStatus} to {taskIn.Status}" : "Updated the task",
+                OldValue = statusChanged ? oldStatus : null,
+                NewValue = statusChanged ? taskIn.Status : null
+            };
+            taskIn.ActivityLog.Add(updateActivity);
+            
             // Ensure AssignedUsers is not null
             if (taskIn.AssignedUsers == null)
                 taskIn.AssignedUsers = new List<string>();

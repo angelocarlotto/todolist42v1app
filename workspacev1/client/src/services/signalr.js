@@ -96,6 +96,18 @@ class SignalRService {
     }
   }
 
+  onCommentAdded(callback) {
+    if (this.connection) {
+      this.connection.on('CommentAdded', callback);
+    }
+  }
+
+  onCommentDeleted(callback) {
+    if (this.connection) {
+      this.connection.on('CommentDeleted', callback);
+    }
+  }
+
   async broadcastTaskUpdate(task) {
     if (this.connection) {
       try {
@@ -103,6 +115,12 @@ class SignalRService {
       } catch (error) {
         console.error('Error broadcasting task update:', error);
       }
+    }
+  }
+
+  on(methodName, callback) {
+    if (this.connection) {
+      this.connection.on(methodName, callback);
     }
   }
 

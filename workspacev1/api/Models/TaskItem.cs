@@ -54,13 +54,17 @@ namespace api.Models
         [BsonElement("shareViewCount")]
         public int ShareViewCount { get; set; } = 0; // Track how many times viewed
 
-        [BsonElement("shareAllowEdit")]
-        public bool ShareAllowEdit { get; set; } = false; // Allow public editing
+    [BsonElement("shareAllowEdit")]
+    public bool ShareAllowEdit { get; set; } = false; // Allow public editing
+
+    [BsonElement("comments")]
+    public List<Comment> Comments { get; set; } = new List<Comment>();
+
+    [BsonElement("activityLog")]
+    public List<ActivityLog> ActivityLog { get; set; } = new List<ActivityLog>();
 
     [BsonElement("createdAt")]
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    [BsonElement("createdBy")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;    [BsonElement("createdBy")]
     public string? CreatedBy { get; set; }
 
     [BsonElement("updatedAt")]

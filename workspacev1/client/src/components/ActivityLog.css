@@ -1,0 +1,105 @@
+.activity-log {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.activity-log h4 {
+  margin: 0 0 15px 0;
+  color: #374151;
+  font-size: 1.1rem;
+}
+
+.no-activity {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 20px;
+}
+
+.activity-timeline {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background-color: white;
+  border-radius: 6px;
+  border-left: 3px solid #d1d5db;
+  transition: all 0.2s;
+}
+
+.activity-item:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.activity-created {
+  border-left-color: #10b981;
+}
+
+.activity-status-changed {
+  border-left-color: #3b82f6;
+}
+
+.activity-commented {
+  border-left-color: #8b5cf6;
+}
+
+.activity-deleted {
+  border-left-color: #ef4444;
+}
+
+.activity-default {
+  border-left-color: #6b7280;
+}
+
+.activity-icon {
+  font-size: 1.5rem;
+  min-width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-content {
+  flex: 1;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.activity-user {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.95rem;
+}
+
+.activity-time {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.activity-description {
+  color: #374151;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.activity-change {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.activity-change strong {
+  color: #374151;
+}

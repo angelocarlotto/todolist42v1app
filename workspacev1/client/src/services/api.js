@@ -162,6 +162,22 @@ class ApiService {
     return response.data;
   }
 
+  // Comment methods
+  async addComment(taskId, text) {
+    const response = await this.client.post(`/api/tasks/${taskId}/comments`, { text });
+    return response.data;
+  }
+
+  async getComments(taskId) {
+    const response = await this.client.get(`/api/tasks/${taskId}/comments`);
+    return response.data;
+  }
+
+  async deleteComment(taskId, commentId) {
+    const response = await this.client.delete(`/api/tasks/${taskId}/comments/${commentId}`);
+    return response.data;
+  }
+
   // Tenant methods
   async getTenants() {
     const response = await this.client.get('/api/tenants');

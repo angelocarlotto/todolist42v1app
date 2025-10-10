@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import apiService from '../services/api';
 import ShareOptionsDialog from './ShareOptionsDialog';
+import CommentsSection from './CommentsSection';
+import ActivityLog from './ActivityLog';
 import './TaskItem.css';
 
 function TaskItem({ task, onEdit, onDelete }) {
@@ -10,6 +12,8 @@ function TaskItem({ task, onEdit, onDelete }) {
   const [shareError, setShareError] = useState(null);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [initialShareValues, setInitialShareValues] = useState(null);
+  const [showComments, setShowComments] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
 
   const handleShareClick = () => {
     // Calculate existing share settings if task is already shared
@@ -184,6 +188,35 @@ function TaskItem({ task, onEdit, onDelete }) {
           <strong>Files:</strong> {task.files.length} attachment(s)
         </div>
       )}
+
+      {/* Expandable Comments Section */}
+      <div className="task-expandable-section">
+        <button 
+          className="expand-btn"
+          onClick={() => setShowComments(!showComments)}
+        >
+          💬 Comments ({task.comments?.length || 0}) {showComments ? '▲' : '▼'}
+        </button>
+        {showComments && (
+          <CommentsSection 
+            taskId={task.id} 
+            initialComments={task.comments || []}
+          />
+        )}
+      </div>
+
+      {/* Expandable Activity Log Section */}
+      <div className="task-expandable-section">
+        <button 
+          className="expand-btn"
+          onClick={() => setShowActivity(!showActivity)}
+        >
+          📋 Activity ({task.activityLog?.length || 0}) {showActivity ? '▲' : '▼'}
+        </button>
+        {showActivity && (
+          <ActivityLog activities={task.activityLog || []} />
+        )}
+      </div>
     </div>
   );
 }
