@@ -1,5 +1,16 @@
 # 🚀 Quick Deploy - Railway.app (5 Minutes)
 
+## 🌐 Live Demo
+
+See TaskFlow running on Railway:
+
+- **🎨 Frontend:** [https://todolist42v1app-production-0c85.up.railway.app/](https://todolist42v1app-production-0c85.up.railway.app/)
+- **🔌 API Docs (Scalar):** [https://todolist42v1app-production.up.railway.app/scalar/v1](https://todolist42v1app-production.up.railway.app/scalar/v1)
+
+> ✅ **Deployed successfully!** SignalR real-time updates working perfectly on Railway.
+
+---
+
 ## 📦 Repository
 
 **GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)

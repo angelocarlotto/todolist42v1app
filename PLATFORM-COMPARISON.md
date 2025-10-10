@@ -1,5 +1,16 @@
 # 🎯 Free Hosting Platform Comparison
 
+## 🌐 Live Example
+
+TaskFlow successfully deployed on **Railway** (recommended option):
+
+- **Frontend:** [https://todolist42v1app-production-0c85.up.railway.app/](https://todolist42v1app-production-0c85.up.railway.app/)
+- **API:** [https://todolist42v1app-production.up.railway.app/scalar/v1](https://todolist42v1app-production.up.railway.app/scalar/v1)
+
+✅ All features working: SignalR, JWT auth, MongoDB, Scalar API docs
+
+---
+
 ## 📦 Repository
 
 **GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)

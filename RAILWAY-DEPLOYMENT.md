@@ -1,5 +1,22 @@
 # 📝 Railway Deployment Configuration
 
+## 🌐 Live Demo - Successfully Deployed!
+
+TaskFlow is now live on Railway:
+
+- **🎨 Frontend Application:** [https://todolist42v1app-production-0c85.up.railway.app/](https://todolist42v1app-production-0c85.up.railway.app/)
+- **🔌 Backend API (Scalar Docs):** [https://todolist42v1app-production.up.railway.app/scalar/v1](https://todolist42v1app-production.up.railway.app/scalar/v1)
+
+**Verified Working:** ✅
+- Real-time SignalR updates
+- JWT authentication & user registration
+- MongoDB persistence
+- CORS with credentials
+- API documentation (Scalar)
+- HTTPS with automatic SSL
+
+---
+
 ## 📦 Repository
 
 **GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)

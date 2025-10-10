@@ -1,6 +1,20 @@
 # SignalR Deployment Guide
 
-## � Repository
+## 🌐 Live Demo - SignalR Working on Railway!
+
+TaskFlow successfully deployed with real-time SignalR on Railway:
+
+- **🎨 Frontend:** [https://todolist42v1app-production-0c85.up.railway.app/](https://todolist42v1app-production-0c85.up.railway.app/)
+- **🔌 API:** [https://todolist42v1app-production.up.railway.app/scalar/v1](https://todolist42v1app-production.up.railway.app/scalar/v1)
+
+**SignalR Status:** ✅ Working perfectly!
+- WebSocket connections established
+- Real-time task updates across all clients
+- Automatic fallback to Server-Sent Events/Long Polling if needed
+
+---
+
+## 📦 Repository
 
 **GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)
 

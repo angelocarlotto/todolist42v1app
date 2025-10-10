@@ -1,6 +1,17 @@
 # SignalR Production Fix - Summary
 
-## � Repository
+## 🌐 Live Demo - Now Working!
+
+After applying the fixes, SignalR is working perfectly on Railway:
+
+- **🎨 Frontend:** [https://todolist42v1app-production-0c85.up.railway.app/](https://todolist42v1app-production-0c85.up.railway.app/)
+- **🔌 API Docs:** [https://todolist42v1app-production.up.railway.app/scalar/v1](https://todolist42v1app-production.up.railway.app/scalar/v1)
+
+**Test it yourself:** Create a task and watch it update in real-time! Open the app in two browser tabs to see live synchronization.
+
+---
+
+## 📦 Repository
 
 **GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)
 

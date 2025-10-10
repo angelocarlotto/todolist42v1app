@@ -4,6 +4,17 @@
 
 This guide covers all the best **FREE** hosting options for your TaskFlow application (React + ASP.NET Core + MongoDB + SignalR).
 
+## 🌐 Live Demo on Railway
+
+TaskFlow is successfully deployed and running on Railway:
+
+- **🎨 Frontend:** [https://todolist42v1app-production-0c85.up.railway.app/](https://todolist42v1app-production-0c85.up.railway.app/)
+- **🔌 API Docs:** [https://todolist42v1app-production.up.railway.app/scalar/v1](https://todolist42v1app-production.up.railway.app/scalar/v1)
+
+> ✅ **All features working:** Real-time SignalR updates, JWT authentication, MongoDB persistence, API documentation!
+
+---
+
 ## 📦 Repository
 
 **GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)
