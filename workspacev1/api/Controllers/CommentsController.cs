@@ -27,7 +27,7 @@ public class CommentsController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var username = User.FindFirst(ClaimTypes.Name)?.Value;
-        var tenantId = User.FindFirst("TenantId")?.Value;
+        var tenantId = User.FindFirst("tenantId")?.Value;
 
         if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(tenantId))
             return Unauthorized();
@@ -81,7 +81,7 @@ public class CommentsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetComments(string taskId)
     {
-        var tenantId = User.FindFirst("TenantId")?.Value;
+        var tenantId = User.FindFirst("tenantId")?.Value;
         if (string.IsNullOrEmpty(tenantId))
             return Unauthorized();
 
@@ -98,7 +98,7 @@ public class CommentsController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var username = User.FindFirst(ClaimTypes.Name)?.Value;
-        var tenantId = User.FindFirst("TenantId")?.Value;
+        var tenantId = User.FindFirst("tenantId")?.Value;
 
         if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(tenantId))
             return Unauthorized();
