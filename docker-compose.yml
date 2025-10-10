@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: todoAppMongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: taskflow2025
+      MONGO_INITDB_DATABASE: TaskManagement
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - taskflow-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  api:
+    build:
+      context: ./workspacev1/api
+      dockerfile: Dockerfile
+    container_name: taskflow-api
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5175
+      - DatabaseSettings__ConnectionString=mongodb://admin:taskflow2025@mongodb:27017
+      - DatabaseSettings__DatabaseName=TaskManagement
+      - DatabaseSettings__TaskCollectionName=tasks
+      - JwtSettings__SecretKey=your-super-secret-key-change-in-production-minimum-32-characters
+      - JwtSettings__Issuer=TaskFlowAPI
+      - JwtSettings__Audience=TaskFlowClient
+      - JwtSettings__ExpirationHours=24
+    ports:
+      - "5175:5175"
+    volumes:
+      - api_uploads:/app/uploads
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - taskflow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5175/api/test"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend Client
+  client:
+    build:
+      context: ./workspacev1/client
+      dockerfile: Dockerfile
+    container_name: taskflow-client
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5175
+    depends_on:
+      - api
+    networks:
+      - taskflow-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  api_uploads:
+    driver: local
+
+networks:
+  taskflow-network:
+    driver: bridge

@@ -1,0 +1,258 @@
+# Kubernetes deployment manifests
+# Deploy with: kubectl apply -f k8s/
+
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: taskflow
+
+---
+# ConfigMap for environment variables
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskflow-config
+  namespace: taskflow
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:5175"
+  DatabaseSettings__DatabaseName: "TaskManagement"
+  DatabaseSettings__TaskCollectionName: "tasks"
+  JwtSettings__Issuer: "TaskFlowAPI"
+  JwtSettings__Audience: "TaskFlowClient"
+  JwtSettings__ExpirationHours: "24"
+
+---
+# Secret for sensitive data
+apiVersion: v1
+kind: Secret
+metadata:
+  name: taskflow-secrets
+  namespace: taskflow
+type: Opaque
+stringData:
+  mongodb-connection: "mongodb://admin:your-password@mongodb:27017"
+  jwt-secret: "your-super-secret-jwt-key-minimum-32-characters-long"
+
+---
+# MongoDB StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  namespace: taskflow
+spec:
+  serviceName: mongodb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:7.0
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: "admin"
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: taskflow-secrets
+              key: mongodb-password
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+
+---
+# MongoDB Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: taskflow
+spec:
+  ports:
+  - port: 27017
+    targetPort: 27017
+  selector:
+    app: mongodb
+  clusterIP: None
+
+---
+# API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskflow-api
+  namespace: taskflow
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: taskflow-api
+  template:
+    metadata:
+      labels:
+        app: taskflow-api
+    spec:
+      containers:
+      - name: api
+        image: ghcr.io/your-org/taskflow-api:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5175
+        env:
+        - name: DatabaseSettings__ConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: taskflow-secrets
+              key: mongodb-connection
+        - name: JwtSettings__SecretKey
+          valueFrom:
+            secretKeyRef:
+              name: taskflow-secrets
+              key: jwt-secret
+        envFrom:
+        - configMapRef:
+            name: taskflow-config
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/test
+            port: 5175
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/test
+            port: 5175
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+---
+# API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskflow-api
+  namespace: taskflow
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 5175
+  selector:
+    app: taskflow-api
+
+---
+# Client Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskflow-client
+  namespace: taskflow
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: taskflow-client
+  template:
+    metadata:
+      labels:
+        app: taskflow-client
+    spec:
+      containers:
+      - name: client
+        image: ghcr.io/your-org/taskflow-client:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+
+---
+# Client Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskflow-client
+  namespace: taskflow
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: taskflow-client
+
+---
+# Ingress (optional - if using ingress controller)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: taskflow-ingress
+  namespace: taskflow
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - taskflow.yourdomain.com
+    - api.taskflow.yourdomain.com
+    secretName: taskflow-tls
+  rules:
+  - host: taskflow.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: taskflow-client
+            port:
+              number: 80
+  - host: api.taskflow.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: taskflow-api
+            port:
+              number: 80

@@ -1,0 +1,33 @@
+version: '3.8'
+
+# Production docker-compose override
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  mongodb:
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    # In production, consider using managed MongoDB (Atlas, Azure CosmosDB, etc.)
+    # and remove this service
+
+  api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - DatabaseSettings__ConnectionString=${MONGO_CONNECTION_STRING}
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
+      - ASPNETCORE_URLS=http://+:5175;https://+:5176
+    # Enable HTTPS in production
+    ports:
+      - "5175:5175"
+      - "5176:5176"
+    # Add SSL certificate volume
+    # volumes:
+    #   - ./certs:/https:ro
+
+  client:
+    environment:
+      - REACT_APP_API_URL=${API_URL}
+    # Consider using nginx with SSL termination
+    # ports:
+    #   - "443:443"
