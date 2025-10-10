@@ -4,6 +4,7 @@ import Login from './components/Login';
 import Navbar from './components/Navbar';
 import TaskList from './components/TaskList';
 import Notifications from './components/Notifications';
+import TaskBoard from './components/TaskBoard';
 import './App.css';
 
 function AppContent() {
@@ -17,6 +18,7 @@ function AppContent() {
     <div className="app-container">
       <Navbar />
       <main className="main-content">
+        <TaskBoard />
         <TaskList />
       </main>
       <Notifications />
