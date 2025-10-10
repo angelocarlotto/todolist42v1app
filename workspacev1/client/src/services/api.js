@@ -152,6 +152,11 @@ class ApiService {
     return response.data;
   }
 
+  async shareTaskWithOptions(taskId, options) {
+    const response = await this.client.post(`/api/share/${taskId}/share`, options);
+    return response.data;
+  }
+
   async revokeShare(taskId) {
     const response = await this.client.post(`/api/share/${taskId}/revoke-share`);
     return response.data;

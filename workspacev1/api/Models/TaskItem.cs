@@ -45,6 +45,18 @@ namespace api.Models
         [BsonElement("publicShareId")]
         public string? PublicShareId { get; set; } // null if not shared
 
+        [BsonElement("shareExpiresAt")]
+        public DateTime? ShareExpiresAt { get; set; } // null if no expiration
+
+        [BsonElement("shareMaxViews")]
+        public int? ShareMaxViews { get; set; } // null if unlimited views
+
+        [BsonElement("shareViewCount")]
+        public int ShareViewCount { get; set; } = 0; // Track how many times viewed
+
+        [BsonElement("shareAllowEdit")]
+        public bool ShareAllowEdit { get; set; } = false; // Allow public editing
+
     [BsonElement("createdAt")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

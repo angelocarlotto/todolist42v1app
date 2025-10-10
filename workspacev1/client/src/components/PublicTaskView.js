@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { format } from 'date-fns';
 import apiService from '../services/api';
 import signalRService from '../services/signalr';
 
@@ -8,6 +9,7 @@ export default function PublicTaskView() {
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorType, setErrorType] = useState(null); // 'expired', 'maxViews', 'notFound', 'editNotAllowed'
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({ description: '', status: '' });
   const [saving, setSaving] = useState(false);
@@ -16,11 +18,22 @@ export default function PublicTaskView() {
     let isMounted = true;
     async function fetchTask() {
       setLoading(true);
+      setError(null);
+      setErrorType(null);
       try {
         const data = await apiService.getPublicTask(publicShareId);
         if (isMounted) setTask(data);
       } catch (err) {
-        setError('Task not found or no longer shared.');
+        if (err.response?.status === 410) {
+          setErrorType('expired');
+          setError('This share link has expired.');
+        } else if (err.response?.status === 403) {
+          setErrorType('maxViews');
+          setError('This share link has reached its maximum number of views.');
+        } else {
+          setErrorType('notFound');
+          setError('Task not found or no longer shared.');
+        }
       } finally {
         setLoading(false);
       }
@@ -37,6 +50,7 @@ export default function PublicTaskView() {
       });
       signalRService.onTaskDeleted(() => {
         setError('This task is no longer shared.');
+        setErrorType('notFound');
         setTask(null);
       });
     }).catch(err => {
@@ -50,8 +64,30 @@ export default function PublicTaskView() {
     };
   }, [publicShareId]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div style={{color:'red'}}>{error}</div>;
+  if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>;
+  
+  if (error) {
+    return (
+      <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ 
+          backgroundColor: errorType === 'expired' || errorType === 'maxViews' ? '#fff3cd' : '#f8d7da', 
+          padding: '20px', 
+          borderRadius: '8px',
+          textAlign: 'center',
+          color: errorType === 'expired' || errorType === 'maxViews' ? '#856404' : '#721c24'
+        }}>
+          <h2>{errorType === 'expired' ? '⏰ Link Expired' : errorType === 'maxViews' ? '👁️ View Limit Reached' : '❌ Not Found'}</h2>
+          <p style={{ fontSize: '1.1rem', marginTop: '10px' }}>{error}</p>
+          {(errorType === 'expired' || errorType === 'maxViews') && (
+            <p style={{ marginTop: '15px', fontSize: '0.9rem' }}>
+              Please contact the task owner for a new share link.
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+  
   if (!task) return null;
 
   const handleEdit = () => {
@@ -66,7 +102,17 @@ export default function PublicTaskView() {
       setTask(updated);
       setEditing(false);
     } catch (err) {
-      alert('Failed to update task: ' + (err.response?.data?.message || err.message));
+      if (err.response?.status === 403) {
+        setErrorType('editNotAllowed');
+        setError('Editing is not allowed for this shared task.');
+        setEditing(false);
+      } else if (err.response?.status === 410) {
+        setErrorType('expired');
+        setError('This share link has expired.');
+        setEditing(false);
+      } else {
+        alert('Failed to update task: ' + (err.response?.data?.message || err.message));
+      }
     } finally {
       setSaving(false);
     }
@@ -81,6 +127,27 @@ export default function PublicTaskView() {
       <div style={{ backgroundColor: '#fff3cd', padding: '10px', marginBottom: '20px', borderRadius: '5px' }}>
         ℹ️ You are viewing a publicly shared task. Changes you make will be visible to everyone.
       </div>
+
+      {/* Expiration and limits info */}
+      {(task.shareExpiresAt || task.shareMaxViews) && (
+        <div style={{ 
+          backgroundColor: '#e7f3ff', 
+          padding: '10px', 
+          marginBottom: '20px', 
+          borderRadius: '5px',
+          fontSize: '0.9rem'
+        }}>
+          {task.shareExpiresAt && (
+            <div>⏰ This link expires: {format(new Date(task.shareExpiresAt), 'MMM dd, yyyy HH:mm')}</div>
+          )}
+          {task.shareMaxViews && (
+            <div>👁️ View limit: {task.shareViewCount || 0} / {task.shareMaxViews}</div>
+          )}
+          {!task.shareAllowEdit && (
+            <div>🔒 Read-only access (editing disabled)</div>
+          )}
+        </div>
+      )}
       
       <h2>{task.shortTitle}</h2>
       
@@ -88,12 +155,14 @@ export default function PublicTaskView() {
         <>
           <p><strong>Description:</strong> {task.description}</p>
           <p><strong>Status:</strong> {task.status}</p>
-          <p><strong>Due:</strong> {new Date(task.dueDate).toLocaleDateString()}</p>
+          <p><strong>Due:</strong> {format(new Date(task.dueDate), 'MMM dd, yyyy')}</p>
           <p><strong>Criticality:</strong> {task.criticality}</p>
           
-          <button onClick={handleEdit} style={{ padding: '10px 20px', marginTop: '10px' }}>
-            Edit Task
-          </button>
+          {task.shareAllowEdit !== false && (
+            <button onClick={handleEdit} style={{ padding: '10px 20px', marginTop: '10px' }}>
+              Edit Task
+            </button>
+          )}
         </>
       ) : (
         <div style={{ marginTop: '20px' }}>

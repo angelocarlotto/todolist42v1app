@@ -1,20 +1,31 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import apiService from '../services/api';
+import ShareOptionsDialog from './ShareOptionsDialog';
 import './TaskItem.css';
 
 function TaskItem({ task, onEdit, onDelete }) {
   const [shareLink, setShareLink] = useState(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareError, setShareError] = useState(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
-  const handleShare = async () => {
+  const handleShareClick = () => {
+    setShowShareDialog(true);
+  };
+
+  const handleShare = async (options) => {
     setShareLoading(true);
     setShareError(null);
     try {
       let publicShareId = task.publicShareId;
       if (!publicShareId) {
-        const res = await apiService.shareTask(task.id);
+        const res = await apiService.shareTaskWithOptions(task.id, options);
+        publicShareId = res.publicShareId;
+      } else {
+        // Re-share with new options
+        await apiService.revokeShare(task.id);
+        const res = await apiService.shareTaskWithOptions(task.id, options);
         publicShareId = res.publicShareId;
       }
       const url = `${window.location.origin}/public/task/${publicShareId}`;
@@ -56,6 +67,12 @@ function TaskItem({ task, onEdit, onDelete }) {
 
   return (
     <div className={`task-item ${isOverdue ? 'overdue' : ''}`}>
+      <ShareOptionsDialog
+        isOpen={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+        onShare={handleShare}
+      />
+      
       <div className="task-header">
         <h3 className="task-title">{task.shortTitle}</h3>
         <div className="task-actions">
@@ -75,7 +92,7 @@ function TaskItem({ task, onEdit, onDelete }) {
           </button>
           <button
             className="btn btn-sm btn-info"
-            onClick={handleShare}
+            onClick={handleShareClick}
             disabled={shareLoading}
             title="Share public link"
           >
