@@ -64,12 +64,32 @@ export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
   useEffect(() => {
+    // Clean up any corrupted localStorage data first
+    const cleanupLocalStorage = () => {
+      const authToken = localStorage.getItem('authToken');
+      const user = localStorage.getItem('user');
+      
+      // Remove any corrupted entries
+      if (authToken === 'undefined' || authToken === 'null') {
+        localStorage.removeItem('authToken');
+      }
+      if (user === 'undefined' || user === 'null') {
+        localStorage.removeItem('user');
+      }
+    };
+    
+    cleanupLocalStorage();
+    
     // Check for existing auth on app start
     const user = apiService.getCurrentUser();
     if (user) {
       dispatch({ type: 'SET_USER', payload: user });
       initializeSignalR();
-      loadTasks();
+      loadTasks().catch(error => {
+        console.error('Failed to load tasks on initialization:', error);
+        // If tasks fail to load, user is still considered authenticated
+        // The error will be handled by the axios interceptor if it's a 401
+      });
     }
   }, []);
 
@@ -125,7 +145,15 @@ export function AppProvider({ children }) {
       const result = await apiService.login(username, password);
       dispatch({ type: 'SET_USER', payload: result.user });
       await initializeSignalR();
-      await loadTasks();
+      
+      // Load tasks but don't fail the login if tasks fail to load
+      try {
+        await loadTasks();
+      } catch (taskError) {
+        console.error('Failed to load tasks after login:', taskError);
+        // Don't throw - the login was successful, just task loading failed
+      }
+      
       return result;
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: error.response?.data?.message || 'Login failed' });

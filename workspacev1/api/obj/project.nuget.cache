@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "vU7pRXJOvMM=",
+  "dgSpecHash": "XV85Q9i6t8k=",
   "success": true,
-  "projectFilePath": "c:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
+  "projectFilePath": "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\P12C73F\\.nuget\\packages\\awssdk.core\\3.7.100.14\\awssdk.core.3.7.100.14.nupkg.sha512",
     "C:\\Users\\P12C73F\\.nuget\\packages\\awssdk.securitytoken\\3.7.100.14\\awssdk.securitytoken.3.7.100.14.nupkg.sha512",

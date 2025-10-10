@@ -25,9 +25,15 @@ class ApiService {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
+          // Clear all auth-related data
           localStorage.removeItem('authToken');
           localStorage.removeItem('user');
-          window.location.href = '/login';
+          localStorage.removeItem('undefined');
+          localStorage.removeItem('null');
+          // Only redirect if we're not already on the login page
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(error);
       }
@@ -40,7 +46,7 @@ class ApiService {
       username,
       password,
     });
-    if (response.data.token) {
+    if (response.data.token && response.data.user) {
       localStorage.setItem('authToken', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
     }
@@ -59,11 +65,25 @@ class ApiService {
   logout() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
+    // Clear any potentially corrupted data
+    localStorage.removeItem('undefined');
+    localStorage.removeItem('null');
   }
 
   getCurrentUser() {
     const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    if (!user || user === 'undefined' || user === 'null') {
+      return null;
+    }
+    try {
+      return JSON.parse(user);
+    } catch (error) {
+      console.error('Error parsing user data from localStorage:', error);
+      // Clear corrupted data
+      localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+      return null;
+    }
   }
 
   // Task methods

@@ -193,6 +193,9 @@ app.MapGet("/weatherforecast", () =>
 // ===========================
 app.Run();
 
+// Make Program accessible for testing
+public partial class Program { }
+
 // ===========================
 // Records / types
 // ===========================

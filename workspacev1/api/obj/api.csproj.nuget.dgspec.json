@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj": {}
+    "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj": {}
   },
   "projects": {
-    "c:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj": {
+    "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
+        "projectUniqueName": "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
         "projectName": "api",
-        "projectPath": "c:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
+        "projectPath": "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
         "packagesPath": "C:\\Users\\P12C73F\\.nuget\\packages\\",
-        "outputPath": "c:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\obj\\",
+        "outputPath": "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
