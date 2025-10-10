@@ -142,6 +142,11 @@ class ApiService {
     return response.data;
   }
 
+  async updatePublicTask(publicShareId, updates) {
+    const response = await this.client.put(`/public/task/${publicShareId}`, updates);
+    return response.data;
+  }
+
   async shareTask(taskId) {
     const response = await this.client.post(`/api/share/${taskId}/share`);
     return response.data;

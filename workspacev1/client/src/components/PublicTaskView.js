@@ -8,6 +8,9 @@ export default function PublicTaskView() {
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState({ description: '', status: '' });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -51,13 +54,80 @@ export default function PublicTaskView() {
   if (error) return <div style={{color:'red'}}>{error}</div>;
   if (!task) return null;
 
+  const handleEdit = () => {
+    setEditData({ description: task.description || '', status: task.status || '' });
+    setEditing(true);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updated = await apiService.updatePublicTask(publicShareId, editData);
+      setTask(updated);
+      setEditing(false);
+    } catch (err) {
+      alert('Failed to update task: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditing(false);
+  };
+
   return (
-    <div className="public-task-view">
+    <div className="public-task-view" style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ backgroundColor: '#fff3cd', padding: '10px', marginBottom: '20px', borderRadius: '5px' }}>
+        ℹ️ You are viewing a publicly shared task. Changes you make will be visible to everyone.
+      </div>
+      
       <h2>{task.shortTitle}</h2>
-      <p>{task.description}</p>
-      <p>Status: {task.status}</p>
-      <p>Due: {new Date(task.dueDate).toLocaleDateString()}</p>
-      <p>Criticality: {task.criticality}</p>
+      
+      {!editing ? (
+        <>
+          <p><strong>Description:</strong> {task.description}</p>
+          <p><strong>Status:</strong> {task.status}</p>
+          <p><strong>Due:</strong> {new Date(task.dueDate).toLocaleDateString()}</p>
+          <p><strong>Criticality:</strong> {task.criticality}</p>
+          
+          <button onClick={handleEdit} style={{ padding: '10px 20px', marginTop: '10px' }}>
+            Edit Task
+          </button>
+        </>
+      ) : (
+        <div style={{ marginTop: '20px' }}>
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px' }}>Description:</label>
+            <textarea
+              value={editData.description}
+              onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+              style={{ width: '100%', minHeight: '100px', padding: '8px' }}
+            />
+          </div>
+          
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px' }}>Status:</label>
+            <select
+              value={editData.status}
+              onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+              style={{ width: '100%', padding: '8px' }}
+            >
+              <option value="ToDo">To Do</option>
+              <option value="InProgress">In Progress</option>
+              <option value="Done">Done</option>
+            </select>
+          </div>
+          
+          <button onClick={handleSave} disabled={saving} style={{ padding: '10px 20px', marginRight: '10px' }}>
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+          <button onClick={handleCancel} disabled={saving} style={{ padding: '10px 20px' }}>
+            Cancel
+          </button>
+        </div>
+      )}
+      
       {task.files && task.files.length > 0 && (
         <div>
           <h4>Files:</h4>
