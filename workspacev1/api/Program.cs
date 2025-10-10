@@ -67,10 +67,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(DefaultCorsPolicy, policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        policy.WithOrigins(
+            "http://localhost:3000",                      // Local development
+            "https://taskflow-client.railway.app"         // Railway frontend
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
     });
 });
 
