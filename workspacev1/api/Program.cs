@@ -99,6 +99,14 @@ app.UseHttpsRedirection();
 // CORS early, so it can handle preflight and add headers
 app.UseCors(DefaultCorsPolicy);
 
+// Serve static files from the uploads directory
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "uploads")),
+    RequestPath = "/uploads"
+});
+
 // Optional manual preflight handler (usually CORS covers this; keep if you prefer explicit 200)
 app.Use(async (context, next) =>
 {

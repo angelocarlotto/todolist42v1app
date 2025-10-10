@@ -136,6 +136,13 @@ class ApiService {
     return response.data;
   }
 
+  async deleteFile(taskId, filePath) {
+    const response = await this.client.delete(`/api/tasks/${taskId}/files`, {
+      data: { filePath }
+    });
+    return response.data;
+  }
+
   // Public task methods
   async getPublicTask(publicShareId) {
     const response = await this.client.get(`/public/task/${publicShareId}`);

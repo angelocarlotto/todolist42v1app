@@ -133,8 +133,57 @@ namespace api.Controllers
             task.UpdatedBy = username;
             task.UpdatedAt = System.DateTime.UtcNow;
             await _taskService.UpdateAsync(id, task);
+            
+            // Broadcast task update via SignalR
+            await _hubContext.Clients.Group(tenantId).SendAsync("TaskUpdated", task);
+            
             return Ok(task.Files);
         }
+
+        [HttpDelete("{id}/files")]
+        public async Task<IActionResult> DeleteFile(string id, [FromBody] DeleteFileRequest request)
+        {
+            var tenantId = User.FindFirst("tenantId")?.Value;
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(username)) return Unauthorized();
+            
+            var task = await _taskService.GetByTenantAndIdAsync(tenantId, id);
+            if (task == null) return NotFound();
+            
+            if (string.IsNullOrEmpty(request.FilePath)) return BadRequest("FilePath is required");
+            
+            // Remove file from task
+            if (!task.Files.Remove(request.FilePath))
+            {
+                return NotFound("File not found in task");
+            }
+            
+            // Delete physical file
+            try
+            {
+                var fileName = request.FilePath.Replace("/uploads/", "", StringComparison.OrdinalIgnoreCase);
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", fileName);
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting physical file: {ex.Message}");
+                // Continue anyway - file removed from task
+            }
+            
+            task.UpdatedBy = username;
+            task.UpdatedAt = System.DateTime.UtcNow;
+            await _taskService.UpdateAsync(id, task);
+            
+            // Broadcast task update via SignalR
+            await _hubContext.Clients.Group(tenantId).SendAsync("TaskUpdated", task);
+            
+            return Ok(task.Files);
+        }
+
         [HttpGet]
         public async Task<ActionResult<List<TaskItem>>> Get()
         {
@@ -277,5 +326,10 @@ namespace api.Controllers
             await _hubContext.Clients.Group(tenantId).SendAsync("TaskDeleted", id);
             return NoContent();
         }
+    }
+
+    public class DeleteFileRequest
+    {
+        public string FilePath { get; set; } = string.Empty;
     }
 }

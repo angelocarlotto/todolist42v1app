@@ -4,6 +4,7 @@ import apiService from '../services/api';
 import ShareOptionsDialog from './ShareOptionsDialog';
 import CommentsSection from './CommentsSection';
 import ActivityLog from './ActivityLog';
+import FileAttachments from './FileAttachments';
 import './TaskItem.css';
 
 function TaskItem({ task, onEdit, onDelete }) {
@@ -183,11 +184,11 @@ function TaskItem({ task, onEdit, onDelete }) {
         </div>
       )}
 
-      {task.files && task.files.length > 0 && (
-        <div className="task-files">
-          <strong>Files:</strong> {task.files.length} attachment(s)
-        </div>
-      )}
+      {/* File Attachments Section */}
+      <FileAttachments 
+        taskId={task.id}
+        files={task.files || []}
+      />
 
       {/* Expandable Comments Section */}
       <div className="task-expandable-section">
