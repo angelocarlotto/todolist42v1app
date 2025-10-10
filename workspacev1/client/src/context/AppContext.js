@@ -101,17 +101,14 @@ export function AppProvider({ children }) {
       // Set up SignalR event handlers
       signalRService.onTaskUpdated((task) => {
         dispatch({ type: 'UPDATE_TASK', payload: task });
-        addNotification(`Task "${task.shortTitle}" was updated`, 'info');
       });
 
       signalRService.onTaskCreated((task) => {
         dispatch({ type: 'ADD_TASK', payload: task });
-        addNotification(`New task "${task.shortTitle}" was created`, 'success');
       });
 
       signalRService.onTaskDeleted((taskId) => {
         dispatch({ type: 'DELETE_TASK', payload: taskId });
-        addNotification('A task was deleted', 'warning');
       });
 
       signalRService.onReceiveReminder((reminder) => {
@@ -208,8 +205,8 @@ export function AppProvider({ children }) {
   const createTask = async (taskData) => {
     try {
       const task = await apiService.createTask(taskData);
-      dispatch({ type: 'ADD_TASK', payload: task });
-      await signalRService.broadcastTaskUpdate(task);
+      // Don't dispatch ADD_TASK here - the backend will broadcast TaskCreated via SignalR
+      // and the onTaskCreated handler will add it to the state
       addNotification('Task created successfully', 'success');
       return task;
     } catch (error) {
@@ -221,9 +218,8 @@ export function AppProvider({ children }) {
   const updateTask = async (id, taskData) => {
     try {
       await apiService.updateTask(id, taskData);
-      const updatedTask = { ...taskData, id };
-      dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
-      await signalRService.broadcastTaskUpdate(updatedTask);
+      // Don't dispatch UPDATE_TASK here - the backend will broadcast TaskUpdated via SignalR
+      // and the onTaskUpdated handler will update it in the state
       addNotification('Task updated successfully', 'success');
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update task' });
@@ -234,7 +230,8 @@ export function AppProvider({ children }) {
   const deleteTask = async (id) => {
     try {
       await apiService.deleteTask(id);
-      dispatch({ type: 'DELETE_TASK', payload: id });
+      // Don't dispatch DELETE_TASK here - the backend will broadcast TaskDeleted via SignalR
+      // and the onTaskDeleted handler will remove it from the state
       addNotification('Task deleted successfully', 'success');
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete task' });
