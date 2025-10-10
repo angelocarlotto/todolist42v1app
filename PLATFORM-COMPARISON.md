@@ -1,5 +1,17 @@
 # 🎯 Free Hosting Platform Comparison
 
+## 📦 Repository
+
+**GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)
+
+```bash
+# Clone the repository
+git clone https://github.com/angelocarlotto/todolist42v1app.git
+cd todolist42v1app
+```
+
+---
+
 ## Quick Decision Guide
 
 **Just want to deploy fast?** → **Railway.app** ⭐⭐⭐⭐⭐  

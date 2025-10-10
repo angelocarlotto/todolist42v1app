@@ -1,5 +1,17 @@
 # 📝 Railway Deployment Configuration
 
+## 📦 Repository
+
+**GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)
+
+```bash
+# Clone the repository
+git clone https://github.com/angelocarlotto/todolist42v1app.git
+cd todolist42v1app
+```
+
+---
+
 ## ✅ CORS Configuration Added
 
 The backend API (`Program.cs`) now includes CORS configuration for Railway deployment:
@@ -26,15 +38,13 @@ builder.Services.AddCors(options =>
 
 Your application is now configured for Railway deployment. Follow these steps:
 
-### Step 1: Push to GitHub
+### Step 1: Get the Code
 
-```bash
-# Add remote (if not already added)
-git remote add origin https://github.com/YOUR_USERNAME/taskflow-app.git
+The code is already on GitHub at: https://github.com/angelocarlotto/todolist42v1app
 
-# Push to GitHub
-git push -u origin master
-```
+You can either:
+- **Deploy directly** from this repository to Railway
+- **Fork** the repository to your own GitHub account
 
 ### Step 2: Deploy to Railway
 

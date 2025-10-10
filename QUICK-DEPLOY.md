@@ -1,5 +1,9 @@
 # 🚀 Quick Deploy - Railway.app (5 Minutes)
 
+## 📦 Repository
+
+**GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)
+
 ## Why Railway?
 ✅ **100% FREE** for small apps ($5 credit/month)  
 ✅ **All-in-one:** Frontend + Backend + MongoDB  
@@ -11,20 +15,17 @@
 
 ## 🏃 Deploy NOW (5 Steps)
 
-### 1️⃣ Push to GitHub (1 min)
+### 1️⃣ Clone or Push to GitHub (1 min)
 
 ```bash
+# Option A: Clone the repository
+git clone https://github.com/angelocarlotto/todolist42v1app.git
+cd todolist42v1app
+
+# Option B: If you already have the code locally, push to your own repo
 cd C:\Carlotto\todolistapp\todolist42v1app
-
-# Initialize git if needed
-git init
-git add .
-git commit -m "TaskFlow - Ready to deploy"
-git branch -M main
-
-# Create repo on GitHub.com, then:
 git remote add origin https://github.com/YOUR_USERNAME/taskflow.git
-git push -u origin main
+git push -u origin master
 ```
 
 ### 2️⃣ Sign Up Railway (30 sec)

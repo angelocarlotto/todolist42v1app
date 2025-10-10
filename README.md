@@ -7,6 +7,16 @@ A modern, real-time collaborative task management application built with React a
 ![React](https://img.shields.io/badge/React-19.2.0-blue)
 ![MongoDB](https://img.shields.io/badge/MongoDB-7.0-green)
 
+## 📦 Repository
+
+**GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)
+
+```bash
+# Clone the repository
+git clone https://github.com/angelocarlotto/todolist42v1app.git
+cd todolist42v1app
+```
+
 ## 🚀 Features
 
 ### ✅ Core Task Management

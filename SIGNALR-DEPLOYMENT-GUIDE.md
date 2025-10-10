@@ -1,6 +1,18 @@
 # SignalR Deployment Guide
 
-## 🚨 Common SignalR Deployment Issues
+## � Repository
+
+**GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)
+
+```bash
+# Clone the repository
+git clone https://github.com/angelocarlotto/todolist42v1app.git
+cd todolist42v1app
+```
+
+---
+
+## �🚨 Common SignalR Deployment Issues
 
 ### Issue: SignalR Not Working in Production
 

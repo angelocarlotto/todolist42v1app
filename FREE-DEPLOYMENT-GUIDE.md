@@ -4,6 +4,16 @@
 
 This guide covers all the best **FREE** hosting options for your TaskFlow application (React + ASP.NET Core + MongoDB + SignalR).
 
+## 📦 Repository
+
+**GitHub:** [https://github.com/angelocarlotto/todolist42v1app](https://github.com/angelocarlotto/todolist42v1app)
+
+```bash
+# Clone the repository
+git clone https://github.com/angelocarlotto/todolist42v1app.git
+cd todolist42v1app
+```
+
 ---
 
 ## 🎯 Quick Comparison
@@ -39,18 +49,20 @@ This guide covers all the best **FREE** hosting options for your TaskFlow applic
 
 ### 🚀 Deployment Steps
 
-#### Step 1: Prepare Your Repository
+#### Step 1: Get the Code
 
-1. **Push your code to GitHub:**
-   ```bash
-   cd C:\Carlotto\todolistapp\todolist42v1app
-   git init
-   git add .
-   git commit -m "Initial commit - TaskFlow app"
-   git branch -M main
-   git remote add origin https://github.com/YOUR_USERNAME/taskflow-app.git
-   git push -u origin main
-   ```
+**Option A: Clone from GitHub (recommended)**
+```bash
+git clone https://github.com/angelocarlotto/todolist42v1app.git
+cd todolist42v1app
+```
+
+**Option B: Use your own fork**
+```bash
+# Fork the repository on GitHub, then:
+git clone https://github.com/YOUR_USERNAME/todolist42v1app.git
+cd todolist42v1app
+```
 
 #### Step 2: Sign Up for Railway
 
