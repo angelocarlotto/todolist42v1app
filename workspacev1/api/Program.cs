@@ -69,7 +69,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
             "http://localhost:3000",                      // Local development
-            "https://todolist42v1app-production-0c85.up.railway.app/"         // Railway frontend
+            "https://todolist42v1app-production-0c85.up.railway.app"         // Railway frontend
         )
         .AllowAnyHeader()
         .AllowAnyMethod()
