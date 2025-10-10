@@ -1,11 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ShareOptionsDialog.css';
 
-function ShareOptionsDialog({ isOpen, onClose, onShare }) {
+function ShareOptionsDialog({ isOpen, onClose, onShare, initialValues }) {
   const [expiresInHours, setExpiresInHours] = useState('');
   const [expiresInDays, setExpiresInDays] = useState('');
   const [maxViews, setMaxViews] = useState('');
   const [allowEdit, setAllowEdit] = useState(false);
+
+  // Populate form with initial values when dialog opens
+  useEffect(() => {
+    if (isOpen && initialValues) {
+      setExpiresInHours(initialValues.expiresInHours || '');
+      setExpiresInDays(initialValues.expiresInDays || '');
+      setMaxViews(initialValues.maxViews || '');
+      setAllowEdit(initialValues.allowEdit || false);
+    }
+  }, [isOpen, initialValues]);
 
   const handleShare = () => {
     const options = {
@@ -32,7 +42,7 @@ function ShareOptionsDialog({ isOpen, onClose, onShare }) {
     <div className="share-dialog-overlay" onClick={handleClose}>
       <div className="share-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="share-dialog-header">
-          <h3>Share Options</h3>
+          <h3>{initialValues ? 'Update Share Options' : 'Share Options'}</h3>
           <button className="close-btn" onClick={handleClose}>×</button>
         </div>
         
@@ -95,7 +105,7 @@ function ShareOptionsDialog({ isOpen, onClose, onShare }) {
             Cancel
           </button>
           <button className="btn btn-primary" onClick={handleShare}>
-            Generate Link
+            {initialValues ? 'Update Link' : 'Generate Link'}
           </button>
         </div>
       </div>

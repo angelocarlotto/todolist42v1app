@@ -9,8 +9,39 @@ function TaskItem({ task, onEdit, onDelete }) {
   const [shareLoading, setShareLoading] = useState(false);
   const [shareError, setShareError] = useState(null);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [initialShareValues, setInitialShareValues] = useState(null);
 
   const handleShareClick = () => {
+    // Calculate existing share settings if task is already shared
+    if (task.publicShareId) {
+      const values = {
+        maxViews: task.shareMaxViews || '',
+        allowEdit: task.shareAllowEdit || false,
+        expiresInHours: '',
+        expiresInDays: ''
+      };
+
+      // Calculate remaining time if there's an expiration
+      if (task.shareExpiresAt) {
+        const now = new Date();
+        const expiresAt = new Date(task.shareExpiresAt);
+        const diffMs = expiresAt - now;
+        
+        if (diffMs > 0) {
+          const totalHours = Math.ceil(diffMs / (1000 * 60 * 60));
+          const days = Math.floor(totalHours / 24);
+          const hours = totalHours % 24;
+          
+          values.expiresInDays = days > 0 ? days : '';
+          values.expiresInHours = hours > 0 ? hours : '';
+        }
+      }
+
+      setInitialShareValues(values);
+    } else {
+      setInitialShareValues(null);
+    }
+    
     setShowShareDialog(true);
   };
 
@@ -71,6 +102,7 @@ function TaskItem({ task, onEdit, onDelete }) {
         isOpen={showShareDialog}
         onClose={() => setShowShareDialog(false)}
         onShare={handleShare}
+        initialValues={initialShareValues}
       />
       
       <div className="task-header">
