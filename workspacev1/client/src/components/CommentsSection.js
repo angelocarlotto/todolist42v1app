@@ -45,9 +45,8 @@ function CommentsSection({ taskId, initialComments = [] }) {
     setError(null);
 
     try {
-      const comment = await apiService.addComment(taskId, newComment.trim());
-      // Comment will be added via SignalR event, but add locally for immediate feedback
-      setComments(prev => [...prev, comment]);
+      await apiService.addComment(taskId, newComment.trim());
+      // Comment will be added via SignalR event automatically - no need to add locally
       setNewComment('');
     } catch (err) {
       setError('Failed to add comment. Please try again.');
