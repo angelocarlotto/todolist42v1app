@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import apiService from '../services/api';
 import signalRService from '../services/signalr';
 
@@ -173,7 +173,7 @@ export function AppProvider({ children }) {
     }
   };
 
-  const loadTasks = async () => {
+  const loadTasks = useCallback(async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const tasks = await apiService.getTasks();
@@ -183,7 +183,7 @@ export function AppProvider({ children }) {
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  };
+  }, []);
 
   const createTask = async (taskData) => {
     try {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import TaskItem from './TaskItem';
 import TaskForm from './TaskForm';
@@ -11,9 +11,8 @@ function TaskList() {
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('dueDate');
 
-  useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
+  // Tasks are already loaded by AppContext on initialization
+  // No need to load them again here
 
   const handleCreateTask = async (taskData) => {
     try {
