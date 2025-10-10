@@ -1,107 +1,201 @@
-using Microsoft.AspNetCore.SignalR;
+using System.Diagnostics;
+using System.Text;
 using api.Models;
 using api.Services;
-using Scalar.AspNetCore; // <-- Added using directive
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ===========================
+// Services (DI)
+// ===========================
+builder.Services.AddControllers();
 builder.Services.AddSignalR();
+
+// Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "default_secret_key")),
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddAuthorization();
+
 builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection("DatabaseSettings"));
+
 builder.Services.AddSingleton<TaskService>();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<TenantService>();
-builder.Services.AddOpenApi();
-builder.Services.AddControllers(); // <-- Added line
 
+builder.Services.AddOpenApi();
+
+// CORS
+const string DefaultCorsPolicy = "DefaultCorsPolicy";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(DefaultCorsPolicy, policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+// ===========================
+// Build app
+// ===========================
 var app = builder.Build();
 
-// Map SignalR hub endpoint
-app.MapHub<api.CollaborationHub>("/hub/collaboration");
-// app.UseRateLimiter(); // Disabled: Rate limiter not available
-
+// ===========================
+// Development-only endpoints
+// ===========================
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
 
-// Accessibility: Add a response header to indicate accessibility best practices (for API clients and future UI integration)
+// ===========================
+// Middleware pipeline
+// (order matters)
+// ===========================
+
+// HTTPS first
+app.UseHttpsRedirection();
+
+// CORS early, so it can handle preflight and add headers
+app.UseCors(DefaultCorsPolicy);
+
+// Optional manual preflight handler (usually CORS covers this; keep if you prefer explicit 200)
 app.Use(async (context, next) =>
 {
-    context.Response.OnStarting(() => {
-        if (!context.Response.HasStarted)
-        {
-            context.Response.Headers["X-Accessibility-Info"] = "Compliant; See /accessibility for details";
-        }
-        return Task.CompletedTask;
-    });
+    if (HttpMethods.IsOptions(context.Request.Method))
+    {
+        context.Response.StatusCode = 200;
+        await context.Response.CompleteAsync();
+        return;
+    }
     await next();
 });
 
-// Performance monitoring: log request duration and expose metrics endpoint
+// Authentication and Authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Accessibility response header
 app.Use(async (context, next) =>
 {
-    var sw = System.Diagnostics.Stopwatch.StartNew();
+    context.Response.OnStarting(() =>
+    {
+        if (!context.Response.HasStarted)
+        {
+            context.Response.Headers["X-Accessibility-Info"] =
+                "Compliant; See /accessibility for details";
+        }
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
+
+// Performance: log duration + accumulate basic metrics (single stopwatch)
+// (replaces the two separate timing middlewares)
+long perfRequestCount = 0;
+long perfTotalDuration = 0;
+
+app.Use(async (context, next) =>
+{
+    var sw = Stopwatch.StartNew();
     await next();
     sw.Stop();
+
     var elapsedMs = sw.ElapsedMilliseconds;
-    // Log to console (could be extended to use a logging provider)
+
+    // Log to console (swap for structured logging provider if desired)
     Console.WriteLine($"[PERF] {context.Request.Method} {context.Request.Path} took {elapsedMs}ms");
-    // Optionally add a response header
+
+    // Response header (if still possible)
     if (!context.Response.HasStarted)
     {
         context.Response.Headers["X-Request-Duration-ms"] = elapsedMs.ToString();
     }
+
+    // Aggregate metrics
+    Interlocked.Increment(ref perfRequestCount);
+    Interlocked.Add(ref perfTotalDuration, elapsedMs);
 });
 
-// Simple accessibility info endpoint
-app.MapGet("/accessibility", () => new {
+// ===========================
+// Endpoints
+// ===========================
+
+// Controllers
+app.MapControllers();
+
+// SignalR hub
+app.MapHub<api.CollaborationHub>("/hub/collaboration");
+
+// Accessibility info
+app.MapGet("/accessibility", () => new
+{
     guidelines = "WCAG 2.1 AA (API: descriptive errors, consistent structure, rate limiting feedback, etc.)",
     apiHeaders = new[] { "X-Accessibility-Info", "X-Request-Duration-ms" },
     notes = "For UI accessibility, see frontend implementation. API responses are structured and provide clear error messages."
 }).WithOpenApi();
 
-// Simple performance metrics endpoint (basic, for demonstration)
-long perfRequestCount = 0;
-long perfTotalDuration = 0;
-app.Use(async (context, next) =>
+// Perf metrics (basic)
+app.MapGet("/metrics", () => new
 {
-    var sw = System.Diagnostics.Stopwatch.StartNew();
-    await next();
-    sw.Stop();
-    System.Threading.Interlocked.Increment(ref perfRequestCount);
-    System.Threading.Interlocked.Add(ref perfTotalDuration, sw.ElapsedMilliseconds);
-});
-app.MapGet("/metrics", () => new {
     requestCount = perfRequestCount,
     avgRequestDurationMs = perfRequestCount > 0 ? (perfTotalDuration / perfRequestCount) : 0
 }).WithOpenApi();
 
-app.UseHttpsRedirection();
-app.MapControllers(); // <-- Added line
-
+// Sample endpoint: weather
 var summaries = new[]
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm",
+    "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
+    var forecast = Enumerable.Range(1, 5).Select(index =>
+        new WeatherForecast(
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
             Random.Shared.Next(-20, 55),
             summaries[Random.Shared.Next(summaries.Length)]
         ))
         .ToArray();
+
     return forecast;
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
+// ===========================
+// Run
+// ===========================
 app.Run();
 
+// ===========================
+// Records / types
+// ===========================
 public record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);

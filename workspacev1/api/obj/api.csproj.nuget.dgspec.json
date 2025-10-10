@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj": {}
+    "c:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj": {}
   },
   "projects": {
-    "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj": {
+    "c:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
+        "projectUniqueName": "c:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
         "projectName": "api",
-        "projectPath": "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
+        "projectPath": "c:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\api.csproj",
         "packagesPath": "C:\\Users\\P12C73F\\.nuget\\packages\\",
-        "outputPath": "C:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\obj\\",
+        "outputPath": "c:\\Carlotto\\todolistapp\\todolist42v1app\\workspacev1\\api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -53,6 +53,10 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[9.0.9, )"

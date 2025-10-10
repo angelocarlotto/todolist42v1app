@@ -4,6 +4,9 @@ using api.Services;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace api.Controllers
 {
@@ -13,11 +16,13 @@ namespace api.Controllers
     {
         private readonly UserService _userService;
         private readonly TenantService _tenantService;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(UserService userService, TenantService tenantService)
+        public AuthController(UserService userService, TenantService tenantService, IConfiguration configuration)
         {
             _userService = userService;
             _tenantService = tenantService;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -79,15 +84,17 @@ namespace api.Controllers
                     return Unauthorized(new { message = "Invalid username or password" });
                 }
 
-                // Generate simple token (in production, use proper JWT)
-                var token = GenerateSimpleToken(user.Id, user.Username, user.TenantId);
+                // Generate JWT token
+                var token = GenerateJwtToken(user.Id, user.Username, user.TenantId);
 
                 return Ok(new { 
                     message = "Login successful", 
                     token = token,
-                    userId = user.Id, 
-                    tenantId = user.TenantId,
-                    username = user.Username
+                    user = new {
+                        userId = user.Id, 
+                        tenantId = user.TenantId,
+                        username = user.Username
+                    }
                 });
             }
             catch (Exception ex)
@@ -187,12 +194,27 @@ namespace api.Controllers
             }
         }
 
-        private string GenerateSimpleToken(string userId, string username, string tenantId)
+        private string GenerateJwtToken(string userId, string username, string tenantId)
         {
-            // Simple base64 encoded token (in production, use proper JWT)
-            var tokenData = $"{userId}:{username}:{tenantId}:{DateTime.UtcNow.AddHours(24):O}";
-            var tokenBytes = Encoding.UTF8.GetBytes(tokenData);
-            return Convert.ToBase64String(tokenBytes);
+            var jwtKey = _configuration["Jwt:Key"] ?? "default_secret_key";
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId),
+                new Claim(ClaimTypes.Name, username),
+                new Claim("tenantId", tenantId),
+                new Claim("userId", userId)
+            };
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(24),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 

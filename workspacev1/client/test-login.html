@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>Task Management App - Login Test</h1>
+    
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" value="testuser" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" value="12345678" required>
+        </div>
+        
+        <button type="submit">Login</button>
+        <button type="button" onclick="testRegistration()">Test Registration</button>
+        <button type="button" onclick="clearResults()">Clear Results</button>
+    </form>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5175';
+        
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            resultsDiv.appendChild(resultDiv);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function testLogin(username, password) {
+            try {
+                addResult(`Testing login for user: ${username}`, 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+                
+                addResult(`Response Status: ${response.status} ${response.statusText}`, 'info');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                addResult(`Login successful! Token: ${data.token ? 'Present' : 'Missing'}`, 'success');
+                addResult(`User: ${JSON.stringify(data.user, null, 2)}`, 'success');
+                
+                // Store in localStorage like the React app does
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                
+                addResult('Credentials stored in localStorage', 'success');
+                
+                // Test a protected endpoint
+                await testProtectedEndpoint(data.token);
+                
+                return data;
+            } catch (error) {
+                addResult(`Login failed: ${error.message}`, 'error');
+                console.error('Login error:', error);
+                throw error;
+            }
+        }
+        
+        async function testProtectedEndpoint(token) {
+            try {
+                addResult('Testing protected endpoint (tasks)...', 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/api/tasks`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    const tasks = await response.json();
+                    addResult(`Tasks loaded successfully! Count: ${tasks.length}`, 'success');
+                } else {
+                    const errorText = await response.text();
+                    addResult(`Tasks endpoint failed: ${response.status} - ${errorText}`, 'error');
+                }
+            } catch (error) {
+                addResult(`Protected endpoint test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testRegistration() {
+            try {
+                const timestamp = Date.now();
+                const username = `testuser${timestamp}`;
+                const password = '87654321';
+                const tenantName = `TestTenant${timestamp}`;
+                
+                addResult(`Testing registration for user: ${username}`, 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        tenantName: tenantName
+                    })
+                });
+                
+                addResult(`Registration Response Status: ${response.status} ${response.statusText}`, 'info');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                addResult('Registration successful!', 'success');
+                addResult(`Response: ${JSON.stringify(data, null, 2)}`, 'success');
+                
+                // Try to login with the new user
+                addResult('Testing login with newly registered user...', 'info');
+                await testLogin(username, password);
+                
+            } catch (error) {
+                addResult(`Registration failed: ${error.message}`, 'error');
+                console.error('Registration error:', error);
+            }
+        }
+        
+        // Form submission handler
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                addResult('Please enter both username and password', 'error');
+                return;
+            }
+            
+            await testLogin(username, password);
+        });
+        
+        // Test CORS and API availability on page load
+        window.addEventListener('load', async function() {
+            addResult('Testing API connectivity...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    const healthData = await response.json();
+                    addResult(`API is accessible! Health status: ${healthData.status}`, 'success');
+                } else {
+                    addResult(`API health check failed: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                addResult(`API connectivity test failed: ${error.message}`, 'error');
+                addResult('Make sure the API server is running on localhost:5175', 'info');
+            }
+        });
+    </script>
+</body>
+</html>
