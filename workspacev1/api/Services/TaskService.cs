@@ -18,12 +18,19 @@ namespace api.Services
         }
 
 
+
         public async Task<List<TaskItem>> GetByTenantAsync(string tenantId) =>
             await _tasks.Find(t => t.TenantId == tenantId).ToListAsync();
 
-
-        public async Task<TaskItem> GetByTenantAndIdAsync(string tenantId, string id) =>
-            await _tasks.Find(t => t.TenantId == tenantId && t.Id == id).FirstOrDefaultAsync();
+        // Allow nullable tenantId for public share
+        public async Task<TaskItem> GetByTenantAndIdAsync(string tenantId, string id)
+        {
+            if (tenantId == null)
+            {
+                return await _tasks.Find(t => t.Id == id).FirstOrDefaultAsync();
+            }
+            return await _tasks.Find(t => t.TenantId == tenantId && t.Id == id).FirstOrDefaultAsync();
+        }
 
         public async Task CreateAsync(TaskItem task) =>
             await _tasks.InsertOneAsync(task);
@@ -33,5 +40,9 @@ namespace api.Services
 
         public async Task RemoveAsync(string id) =>
             await _tasks.DeleteOneAsync(t => t.Id == id);
+
+        // Get task by public share ID (for unauthenticated access)
+        public async Task<TaskItem> GetByPublicShareIdAsync(string publicShareId) =>
+            await _tasks.Find(t => t.PublicShareId == publicShareId).FirstOrDefaultAsync();
     }
 }

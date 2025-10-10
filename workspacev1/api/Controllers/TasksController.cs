@@ -222,6 +222,11 @@ namespace api.Controllers
             await _taskService.UpdateAsync(id, taskIn);
             // Broadcast to all users in the tenant group
             await _hubContext.Clients.Group(tenantId).SendAsync("TaskUpdated", taskIn);
+            // If task is public, broadcast to public group as well
+            if (!string.IsNullOrEmpty(taskIn.PublicShareId))
+            {
+                await _hubContext.Clients.Group(taskIn.PublicShareId).SendAsync("TaskUpdated", taskIn);
+            }
             return NoContent();
         }
 

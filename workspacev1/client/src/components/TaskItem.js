@@ -1,8 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
+import apiService from '../services/api';
 import './TaskItem.css';
 
 function TaskItem({ task, onEdit, onDelete }) {
+  const [shareLink, setShareLink] = useState(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareError, setShareError] = useState(null);
+
+  const handleShare = async () => {
+    setShareLoading(true);
+    setShareError(null);
+    try {
+      let publicShareId = task.publicShareId;
+      if (!publicShareId) {
+        const res = await apiService.shareTask(task.id);
+        publicShareId = res.publicShareId;
+      }
+      const url = `${window.location.origin}/public/task/${publicShareId}`;
+      setShareLink(url);
+      await navigator.clipboard.writeText(url);
+    } catch (err) {
+      setShareError('Failed to generate/copy share link.');
+    } finally {
+      setShareLoading(false);
+    }
+  };
   const getPriorityClass = (criticality) => {
     switch (criticality) {
       case 'High':
@@ -50,10 +73,25 @@ function TaskItem({ task, onEdit, onDelete }) {
           >
             🗑️
           </button>
+          <button
+            className="btn btn-sm btn-info"
+            onClick={handleShare}
+            disabled={shareLoading}
+            title="Share public link"
+          >
+            🔗
+          </button>
         </div>
       </div>
 
       <p className="task-description">{task.description}</p>
+      {shareLink && (
+        <div className="share-link-info">
+          <span>Public link copied!</span>
+          <a href={shareLink} target="_blank" rel="noopener noreferrer">Open</a>
+        </div>
+      )}
+      {shareError && <div className="share-link-error" style={{color:'red'}}>{shareError}</div>}
 
       <div className="task-meta">
         <span className={`task-status ${getStatusClass(task.status)}`}>

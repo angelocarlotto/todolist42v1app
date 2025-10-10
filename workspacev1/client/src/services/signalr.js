@@ -19,7 +19,7 @@ class SignalRService {
       await this.connection.start();
       console.log('SignalR Connected');
 
-      // Join user's group and tenant group for notifications
+      // Join user's group and tenant group for notifications (only if authenticated)
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       if (user.id) {
         await this.connection.invoke('JoinGroup', user.id);
@@ -32,6 +32,36 @@ class SignalRService {
     } catch (error) {
       console.error('SignalR Connection Error:', error);
       throw error;
+    }
+  }
+
+  async startPublic() {
+    try {
+      // Public connection without authentication
+      this.connection = new HubConnectionBuilder()
+        .withUrl('http://localhost:5175/hub/collaboration')
+        .withAutomaticReconnect()
+        .configureLogging(LogLevel.Information)
+        .build();
+
+      await this.connection.start();
+      console.log('SignalR Connected (Public)');
+
+      return this.connection;
+    } catch (error) {
+      console.error('SignalR Connection Error:', error);
+      throw error;
+    }
+  }
+
+  async joinGroup(groupName) {
+    if (this.connection && this.connection.state === 'Connected') {
+      try {
+        await this.connection.invoke('JoinGroup', groupName);
+        console.log(`Joined group: ${groupName}`);
+      } catch (error) {
+        console.error(`Error joining group ${groupName}:`, error);
+      }
     }
   }
 

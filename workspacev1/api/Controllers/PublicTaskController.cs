@@ -17,9 +17,7 @@ namespace api.Controllers
         [HttpGet("{publicShareId}")]
         public async Task<IActionResult> GetByPublicShareId(string publicShareId)
         {
-            // No GetAsync, so fallback to GetByTenantAsync for all tenants (not ideal, but for build fix)
-            var allTasks = await _taskService.GetByTenantAsync(null);
-            var task = allTasks.Find(t => t.PublicShareId == publicShareId);
+            var task = await _taskService.GetByPublicShareIdAsync(publicShareId);
             if (task == null) return NotFound();
             // Only return non-sensitive fields
             return Ok(new {
