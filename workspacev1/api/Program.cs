@@ -61,16 +61,56 @@ builder.Services.AddSingleton<TenantService>();
 
 builder.Services.AddOpenApi();
 
-// CORS - Allow any origin (open API)
+// CORS - SignalR requires AllowCredentials (incompatible with AllowAnyOrigin)
 const string DefaultCorsPolicy = "DefaultCorsPolicy";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(DefaultCorsPolicy, policy =>
     {
-        policy.AllowAnyOrigin()      // Allow ANY client to connect
+        // For SignalR to work with authentication, we need specific origins + AllowCredentials
+        // Wildcard subdomains are automatically supported in WithOrigins()
+        policy.WithOrigins(
+                  "http://localhost:3000",
+                  "http://localhost:5175",
+                  "https://*.railway.app",      // Railway deployments
+                  "https://*.up.railway.app",   // Railway custom domains
+                  "https://*.onrender.com",     // Render deployments
+                  "https://*.fly.dev",          // Fly.io deployments
+                  "https://*.vercel.app",       // Vercel deployments
+                  "https://*.netlify.app"       // Netlify deployments
+              )
+              .SetIsOriginAllowed(origin => 
+              {
+                  // Allow localhost with any port
+                  if (origin.StartsWith("http://localhost:") || origin.StartsWith("https://localhost:"))
+                      return true;
+                  
+                  // Allow Railway
+                  if (origin.EndsWith(".railway.app") || origin.EndsWith(".up.railway.app"))
+                      return true;
+                  
+                  // Allow Render
+                  if (origin.EndsWith(".onrender.com"))
+                      return true;
+                  
+                  // Allow Fly.io
+                  if (origin.EndsWith(".fly.dev"))
+                      return true;
+                  
+                  // Allow Vercel
+                  if (origin.EndsWith(".vercel.app"))
+                      return true;
+                  
+                  // Allow Netlify
+                  if (origin.EndsWith(".netlify.app"))
+                      return true;
+                  
+                  return false;
+              })
               .AllowAnyHeader()
-              .AllowAnyMethod();
-        // Note: Cannot use .AllowCredentials() with AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowCredentials();  // Required for SignalR WebSockets with auth
+        // Note: AllowCredentials() requires specific origins (cannot use AllowAnyOrigin)
     });
 });
 

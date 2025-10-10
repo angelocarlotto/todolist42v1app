@@ -19,11 +19,16 @@ class SignalRService {
       }
 
       const token = localStorage.getItem('authToken');
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5175';
+      const hubUrl = `${apiUrl}/hub/collaboration`;
+      
       this.connection = new HubConnectionBuilder()
-        .withUrl('http://localhost:5175/hub/collaboration', {
-          accessTokenFactory: () => token
+        .withUrl(hubUrl, {
+          accessTokenFactory: () => token,
+          skipNegotiation: false, // Let SignalR negotiate best transport
+          transport: undefined    // Use all available transports (WebSockets, ServerSentEvents, LongPolling)
         })
-        .withAutomaticReconnect()
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) // Custom retry intervals
         .configureLogging(LogLevel.Information)
         .build();
 
@@ -75,9 +80,15 @@ class SignalRService {
   async startPublic() {
     try {
       // Public connection without authentication
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5175';
+      const hubUrl = `${apiUrl}/hub/collaboration`;
+      
       this.connection = new HubConnectionBuilder()
-        .withUrl('http://localhost:5175/hub/collaboration')
-        .withAutomaticReconnect()
+        .withUrl(hubUrl, {
+          skipNegotiation: false,
+          transport: undefined
+        })
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
         .configureLogging(LogLevel.Information)
         .build();
 
