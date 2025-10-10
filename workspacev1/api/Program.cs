@@ -80,13 +80,16 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ===========================
-// Development-only endpoints
+// API Documentation (Scalar) - Available in all environments
 // ===========================
-if (app.Environment.IsDevelopment())
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-}
+    options
+        .WithTitle("TaskFlow API")
+        .WithTheme(ScalarTheme.Purple)
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+});
 
 // ===========================
 // Middleware pipeline
