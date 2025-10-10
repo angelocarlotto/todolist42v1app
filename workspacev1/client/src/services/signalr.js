@@ -7,6 +7,17 @@ class SignalRService {
 
   async start() {
     try {
+      // If already connected, don't create a new connection
+      if (this.connection && this.connection.state === 'Connected') {
+        console.log('SignalR already connected, reusing existing connection');
+        return this.connection;
+      }
+
+      // If connection exists but not connected, stop it first
+      if (this.connection) {
+        await this.connection.stop();
+      }
+
       const token = localStorage.getItem('authToken');
       this.connection = new HubConnectionBuilder()
         .withUrl('http://localhost:5175/hub/collaboration', {
@@ -16,16 +27,42 @@ class SignalRService {
         .configureLogging(LogLevel.Information)
         .build();
 
+      // Set up connection lifecycle handlers BEFORE starting
+      this.connection.onreconnecting((error) => {
+        console.warn('SignalR Reconnecting:', error);
+      });
+
+      this.connection.onreconnected((connectionId) => {
+        console.log('SignalR Reconnected:', connectionId);
+      });
+
+      this.connection.onclose((error) => {
+        console.error('SignalR Connection Closed:', error);
+      });
+
       await this.connection.start();
       console.log('SignalR Connected');
 
+      // Wait a bit for connection to be fully ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Join user's group and tenant group for notifications (only if authenticated)
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      if (user.id) {
-        await this.connection.invoke('JoinGroup', user.id);
+      
+      if (user.userId) {
+        try {
+          await this.connection.invoke('JoinGroup', user.userId);
+        } catch (error) {
+          console.error('Failed to join userId group:', error);
+        }
       }
+      
       if (user.tenantId) {
-        await this.connection.invoke('JoinGroup', user.tenantId);
+        try {
+          await this.connection.invoke('JoinGroup', user.tenantId);
+        } catch (error) {
+          console.error('Failed to join tenantId group:', error);
+        }
       }
 
       return this.connection;
@@ -98,13 +135,13 @@ class SignalRService {
 
   onCommentAdded(callback) {
     if (this.connection) {
-      this.connection.on('CommentAdded', callback);
+      this.connection.on('commentAdded', callback);
     }
   }
 
   onCommentDeleted(callback) {
     if (this.connection) {
-      this.connection.on('CommentDeleted', callback);
+      this.connection.on('commentDeleted', callback);
     }
   }
 

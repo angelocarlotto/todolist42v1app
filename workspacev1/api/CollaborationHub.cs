@@ -8,6 +8,7 @@ namespace api
         public async Task JoinGroup(string groupName)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+            Console.WriteLine($"[SignalR] Connection {Context.ConnectionId} joined group: {groupName}");
         }
 
         // Broadcast task update to all users in the tenant group
@@ -41,6 +42,18 @@ namespace api
             {
                 await Clients.Group(tenantId).SendAsync("TaskDeleted", taskId);
             }
+        }
+
+        public override async Task OnConnectedAsync()
+        {
+            Console.WriteLine($"[SignalR] Client connected: {Context.ConnectionId}");
+            await base.OnConnectedAsync();
+        }
+
+        public override async Task OnDisconnectedAsync(Exception? exception)
+        {
+            Console.WriteLine($"[SignalR] Client disconnected: {Context.ConnectionId}, Exception: {exception?.Message}");
+            await base.OnDisconnectedAsync(exception);
         }
     }
 }

@@ -28,11 +28,12 @@ function appReducer(state, action) {
     case 'ADD_TASK':
       return { ...state, tasks: [...state.tasks, action.payload] };
     case 'UPDATE_TASK':
+      const newTasks = state.tasks.map(task =>
+        task.id === action.payload.id ? { ...action.payload } : task
+      );
       return {
         ...state,
-        tasks: state.tasks.map(task =>
-          task.id === action.payload.id ? action.payload : task
-        ),
+        tasks: newTasks,
       };
     case 'DELETE_TASK':
       return {
@@ -118,6 +119,25 @@ export function AppProvider({ children }) {
           `Reminder: "${reminder.title}" is due ${new Date(reminder.dueDate).toLocaleDateString()}`,
           'warning'
         );
+      });
+
+      // Handle comment events - refresh the task to get updated comments and activity log
+      signalRService.onCommentAdded(async (data) => {
+        try {
+          const updatedTask = await apiService.getTask(data.taskId);
+          dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+        } catch (error) {
+          console.error('Failed to refresh task after comment added:', error);
+        }
+      });
+
+      signalRService.onCommentDeleted(async (data) => {
+        try {
+          const updatedTask = await apiService.getTask(data.taskId);
+          dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+        } catch (error) {
+          console.error('Failed to refresh task after comment deleted:', error);
+        }
       });
     } catch (error) {
       console.error('Failed to initialize SignalR:', error);

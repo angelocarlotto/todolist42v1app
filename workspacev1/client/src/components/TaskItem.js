@@ -199,6 +199,7 @@ function TaskItem({ task, onEdit, onDelete }) {
         </button>
         {showComments && (
           <CommentsSection 
+            key={`comments-${task.id}-${task.comments?.length || 0}`}
             taskId={task.id} 
             initialComments={task.comments || []}
           />
@@ -214,7 +215,10 @@ function TaskItem({ task, onEdit, onDelete }) {
           📋 Activity ({task.activityLog?.length || 0}) {showActivity ? '▲' : '▼'}
         </button>
         {showActivity && (
-          <ActivityLog activities={task.activityLog || []} />
+          <ActivityLog 
+            key={`activity-${task.id}-${task.activityLog?.length || 0}`}
+            activities={task.activityLog || []} 
+          />
         )}
       </div>
     </div>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import apiService from '../services/api';
-import signalRService from '../services/signalr';
 import './CommentsSection.css';
 
 function CommentsSection({ taskId, initialComments = [] }) {
@@ -13,29 +12,6 @@ function CommentsSection({ taskId, initialComments = [] }) {
   useEffect(() => {
     setComments(initialComments);
   }, [initialComments]);
-
-  useEffect(() => {
-    // Listen for real-time comment updates
-    const handleCommentAdded = (data) => {
-      if (data.taskId === taskId) {
-        setComments(prev => [...prev, data.comment]);
-      }
-    };
-
-    const handleCommentDeleted = (data) => {
-      if (data.taskId === taskId) {
-        setComments(prev => prev.filter(c => c.id !== data.commentId));
-      }
-    };
-
-    signalRService.on('CommentAdded', handleCommentAdded);
-    signalRService.on('CommentDeleted', handleCommentDeleted);
-
-    return () => {
-      signalRService.off('CommentAdded', handleCommentAdded);
-      signalRService.off('CommentDeleted', handleCommentDeleted);
-    };
-  }, [taskId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
