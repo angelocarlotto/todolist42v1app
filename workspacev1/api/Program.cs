@@ -61,19 +61,16 @@ builder.Services.AddSingleton<TenantService>();
 
 builder.Services.AddOpenApi();
 
-// CORS
+// CORS - Allow any origin (open API)
 const string DefaultCorsPolicy = "DefaultCorsPolicy";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(DefaultCorsPolicy, policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:3000",                      // Local development
-            "https://todolist42v1app-production-0c85.up.railway.app"         // Railway frontend
-        )
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowCredentials();
+        policy.AllowAnyOrigin()      // Allow ANY client to connect
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+        // Note: Cannot use .AllowCredentials() with AllowAnyOrigin()
     });
 });
 
