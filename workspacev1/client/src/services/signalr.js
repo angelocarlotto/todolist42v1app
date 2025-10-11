@@ -19,7 +19,7 @@ class SignalRService {
       }
 
       const token = localStorage.getItem('authToken');
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5175';
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://10.0.0.71:5175';
       const hubUrl = `${apiUrl}/hub/collaboration`;
       
       this.connection = new HubConnectionBuilder()
@@ -80,7 +80,7 @@ class SignalRService {
   async startPublic() {
     try {
       // Public connection without authentication
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5175';
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://10.0.0.71:5175';
       const hubUrl = `${apiUrl}/hub/collaboration`;
       
       this.connection = new HubConnectionBuilder()
