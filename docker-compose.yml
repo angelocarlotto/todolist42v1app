@@ -50,7 +50,7 @@ services:
     networks:
       - taskflow-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5175/api/test"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:5175/api/test"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -65,13 +65,13 @@ services:
     ports:
       - "3000:80"
     environment:
-      - REACT_APP_API_URL=http://localhost:5175
+      - REACT_APP_API_URL=http://127.0.0.1:5175
     depends_on:
       - api
     networks:
       - taskflow-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80"]
       interval: 30s
       timeout: 10s
       retries: 3
