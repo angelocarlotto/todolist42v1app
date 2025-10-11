@@ -65,7 +65,7 @@ services:
     ports:
       - "3000:80"
     environment:
-      - REACT_APP_API_URL=http://127.0.0.1:5175
+      - REACT_APP_API_URL=http://api:5175
     depends_on:
       - api
     networks:
