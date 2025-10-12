@@ -2,7 +2,10 @@
 FROM node:18-alpine AS build
 WORKDIR /app
 
-# Copy package files
+# 1) Accept build arg for CRA env
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+
 COPY package*.json ./
 
 # Install dependencies
@@ -11,7 +14,7 @@ RUN npm ci --production=false
 # Copy source code
 COPY . .
 
-# Build the app
+# 2) CRA will read REACT_APP_* here
 RUN npm run build
 
 # Production stage with nginx
