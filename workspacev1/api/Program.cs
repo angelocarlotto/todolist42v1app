@@ -72,19 +72,24 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
                   "http://localhost:3000",
                   "http://localhost:5175",
-                  "https://*.railway.app",      // Railway deployments
-                  "https://*.up.railway.app",   // Railway custom domains
-                  "https://*.onrender.com",     // Render deployments
-                  "https://*.fly.dev",          // Fly.io deployments
-                  "https://*.vercel.app",       // Vercel deployments
-                  "https://*.netlify.app",      // Netlify deployments
-                  "https://*:*",                // Allow all ports
-                    "*"
+                  "http://10.0.0.71:3000",       // Local network client
+                  "http://10.0.0.71:5175",       // Local network API
+                  "https://*.railway.app",       // Railway deployments
+                  "https://*.up.railway.app",    // Railway custom domains
+                  "https://*.onrender.com",      // Render deployments
+                  "https://*.fly.dev",           // Fly.io deployments
+                  "https://*.vercel.app",        // Vercel deployments
+                  "https://*.netlify.app",       // Netlify deployments
+                  "https://*:*"                  // Allow all ports
               )
               .SetIsOriginAllowed(origin => 
               {
                   // Allow localhost with any port
                   if (origin.StartsWith("http://localhost:") || origin.StartsWith("https://localhost:"))
+                      return true;
+                  
+                  // Allow local network (10.0.0.x) with any port
+                  if (origin.StartsWith("http://10.0.0.") || origin.StartsWith("https://10.0.0."))
                       return true;
                   
                   // Allow Railway
