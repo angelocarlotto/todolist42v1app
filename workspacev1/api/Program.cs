@@ -77,7 +77,9 @@ builder.Services.AddCors(options =>
                   "https://*.onrender.com",     // Render deployments
                   "https://*.fly.dev",          // Fly.io deployments
                   "https://*.vercel.app",       // Vercel deployments
-                  "https://*.netlify.app"       // Netlify deployments
+                  "https://*.netlify.app",      // Netlify deployments
+
+                    "*"
               )
               .SetIsOriginAllowed(origin => 
               {
