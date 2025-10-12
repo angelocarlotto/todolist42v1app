@@ -72,8 +72,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
                   "http://localhost:3000",
                   "http://localhost:5175",
-                  "http://10.0.0.71:3000",       // Local network client
-                  "http://10.0.0.71:5175",       // Local network API
+                  "http://10.0.0.*:3000",       // Local network client
+                  "http://10.0.0.*:5175",       // Local network API
                   "https://*.railway.app",       // Railway deployments
                   "https://*.up.railway.app",    // Railway custom domains
                   "https://*.onrender.com",      // Render deployments
@@ -82,8 +82,9 @@ builder.Services.AddCors(options =>
                   "https://*.netlify.app",       // Netlify deployments
                   "https://*:*"                  // Allow all ports
               )
-              .SetIsOriginAllowed(origin => 
+              .SetIsOriginAllowed(origin =>
               {
+                Console.WriteLine($"CORS check for origin: {origin}");
                   // Allow localhost with any port
                   if (origin.StartsWith("http://localhost:") || origin.StartsWith("https://localhost:"))
                       return true;
