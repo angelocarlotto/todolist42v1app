@@ -107,7 +107,7 @@ builder.Services.AddCors(options =>
                   if (origin.EndsWith(".netlify.app"))
                       return true;
                   
-                  return false;
+                  return true;
               })
               .AllowAnyHeader()
               .AllowAnyMethod()
