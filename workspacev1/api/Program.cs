@@ -78,7 +78,7 @@ builder.Services.AddCors(options =>
                   "https://*.fly.dev",          // Fly.io deployments
                   "https://*.vercel.app",       // Vercel deployments
                   "https://*.netlify.app",      // Netlify deployments
-
+                  "https://*:*",                // Allow all ports
                     "*"
               )
               .SetIsOriginAllowed(origin => 
@@ -102,12 +102,16 @@ builder.Services.AddCors(options =>
                   // Allow Vercel
                   if (origin.EndsWith(".vercel.app"))
                       return true;
-                  
+
                   // Allow Netlify
                   if (origin.EndsWith(".netlify.app"))
                       return true;
-                  
-                  return true;
+
+                  // Allow all ports
+                  if (origin.EndsWith(":*"))
+                      return true;
+
+                  return false;
               })
               .AllowAnyHeader()
               .AllowAnyMethod()
