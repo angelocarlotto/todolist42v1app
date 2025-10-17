@@ -12,8 +12,8 @@ A modern, real-time collaborative task management application built with React a
 
 Experience TaskFlow in action on Railway:
 
-- **🎨 Frontend (Client):** [https://todolist42v1app-production-0c85.up.railway.app/](https://todolist42v1app-production-0c85.up.railway.app/)
-- **🔌 Backend API (Scalar Docs):** [https://todolist42v1app-production.up.railway.app/scalar/v1](https://todolist42v1app-production.up.railway.app/scalar/v1)
+- **🎨 Frontend (Client):** [https://todolist42v1app-client.up.railway.app/login](https://todolist42v1app-client.up.railway.app/login)
+- **🔌 Backend API (Scalar Docs):** [https://todolist42v1app-api.up.railway.app/scalar/v1](https://todolist42v1app-api.up.railway.app/scalar/v1)
 
 > 💡 **Try it now!** Register a new account and explore real-time task collaboration features.
 
