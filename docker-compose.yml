@@ -1,14 +1,11 @@
 version: '3.8'
 
 services:
-  # MongoDB Database (optional - use external managed DB in production)
+  # MongoDB Database
   mongodb:
     image: mongo:7.0
     container_name: todoAppMongodb
     restart: unless-stopped
-    profiles:
-      - local
-      - development
     labels:
       - "coolify.managed=true"
       - "coolify.type=database"
