@@ -1,0 +1,74 @@
+version: '3.8'
+
+# Coolify-optimized docker-compose
+# This configuration is specifically for Coolify deployments
+# Coolify will automatically inject environment variables
+
+services:
+  # Backend API
+  api:
+    build:
+      context: ./workspacev1/api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.port=5175"
+      - "coolify.domains=${API_DOMAIN}"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5175
+      - DatabaseSettings__ConnectionString=${MONGO_CONNECTION_STRING}
+      - DatabaseSettings__DatabaseName=${MONGO_DATABASE:-TaskManagement}
+      - DatabaseSettings__TaskCollectionName=${MONGO_COLLECTION:-tasks}
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
+      - JwtSettings__Issuer=${JWT_ISSUER:-TaskFlowAPI}
+      - JwtSettings__Audience=${JWT_AUDIENCE:-TaskFlowClient}
+      - JwtSettings__ExpirationHours=${JWT_EXPIRATION_HOURS:-24}
+    ports:
+      - "5175:5175"
+    volumes:
+      - api_uploads:/app/uploads
+    networks:
+      - coolify
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:5175/api/test || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Client
+  client:
+    build:
+      context: ./workspacev1/client
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
+    restart: unless-stopped
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.port=80"
+      - "coolify.domains=${CLIENT_DOMAIN}"
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - coolify
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  api_uploads:
+    driver: local
+
+networks:
+  coolify:
+    external: true
+    name: coolify
