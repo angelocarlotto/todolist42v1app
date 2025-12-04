@@ -18,6 +18,9 @@ RUN dotnet publish "api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
 
+# Install wget for health checks
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
 # Create uploads directory
 RUN mkdir -p /app/uploads
 
