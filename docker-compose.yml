@@ -54,9 +54,6 @@ services:
       - "${API_PORT:-5175}:${API_PORT:-5175}"
     volumes:
       - api_uploads:/app/uploads
-    depends_on:
-      mongodb:
-        condition: service_healthy
     networks:
       - taskflow-network
     healthcheck:
@@ -73,7 +70,8 @@ services:
       dockerfile: Dockerfile
       args:
         # BUILD-TIME argument (baked into static bundle by CRA)
-        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:5175}
+        # In Coolify, this should be set to https://todo_api.angelocarlotto.com.br
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
     container_name: taskflow-client
     restart: unless-stopped
     labels:
